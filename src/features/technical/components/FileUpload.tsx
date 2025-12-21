@@ -1,81 +1,97 @@
 import * as React from "react"
 import { useDropzone } from "react-dropzone"
-import { Upload, FileText, X } from "lucide-react"
-import Papa from "papaparse" // Librería para parsear CSVs
+import { Upload, FileText, X, Loader2 } from "lucide-react"
+import axios from "axios"
 import { cn } from "../../../lib/utils"
 import { Button } from "../../../components/ui/button"
+import { BackendFileResponse } from "../types/api.types"
 
 interface FileUploadProps {
-  onDataLoaded: (data: any[]) => void // Función que comunica los datos al padre
+    onUploadSuccess: (data: BackendFileResponse, originalName: string) => void;
 }
 
-export function FileUpload({ onDataLoaded }: FileUploadProps) {
-  const [file, setFile] = React.useState<File | null>(null)
+export function FileUpload({ onUploadSuccess}: FileUploadProps) {
+    
+    const [isUploading, setIsUploading] = React.useState(false);
+    const [progress, setProgress] = React.useState(0);
 
-  // Configuración de react-dropzone
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      'text/csv': ['.csv'],
-      'application/vnd.ms-excel': ['.xls'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
-    },
-    maxFiles: 1,
-    onDrop: (acceptedFiles) => {
-      const selectedFile = acceptedFiles[0]
-      setFile(selectedFile)
-      
-      // Procesamos el archivo CSV inmediatamente
-      Papa.parse(selectedFile, {
-        header: true, // Convierte la primera fila en llaves del objeto
-        skipEmptyLines: true,
-        complete: (results) => {
-          onDataLoaded(results.data) // Enviamos los datos al componente padre
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        accept: {
+            'text/csv': ['.csv'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+            'application/octet-stream': ['.parquet']
+        },
+        maxFiles: 1,
+        disabled: isUploading,
+        onDrop: async (acceptedFiles) => {
+            const file = acceptedFiles[0];
+            if (file) await handleUpload(file);
         }
-      })
-    }
-  })
+    });
 
-  return (
-    <div className="space-y-4">
-      <div
-        {...getRootProps()}
-        className={cn(
-          "border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center cursor-pointer transition-all",
-          "hover:bg-primary/5 hover:border-primary",
-          isDragActive ? "bg-primary/10 border-primary scale-[0.99]" : "border-muted-foreground/25"
-        )}
-      >
-        <input {...getInputProps()} />
-        
-        <div className="bg-primary/10 p-4 rounded-full mb-4">
-          <Upload className="h-8 w-8 text-primary" />
-        </div>
 
-        {isDragActive ? (
-          <p className="text-primary font-medium text-center">¡Suéltalo aquí!</p>
-        ) : (
-          <div className="text-center">
-            <p className="font-semibold text-lg">Haz clic o arrastra un archivo</p>
-            <p className="text-sm text-muted-foreground mt-1">Formatos soportados: CSV, Excel (Próximamente Parquet)</p>
-          </div>
-        )}
-      </div>
+    const handleUpload = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file); // 'file' debe coincidir con el nombre esperado por el backend
 
-      {/* Indicador de archivo seleccionado */}
-      {file && (
-        <div className="flex items-center justify-between p-3 bg-muted rounded-md border animate-in slide-in-from-left-2">
-          <div className="flex items-center gap-3">
-            <FileText className="h-5 w-5 text-primary" />
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{file.name}</span>
-              <span className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</span>
+        setIsUploading(true);
+        setProgress(0);
+
+        try{
+            const response = await axios.post<BackendFileResponse>(
+                `${import.meta.env.VITE_API_BASE_URL}/upload`,
+                formData,
+                {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    onUploadProgress: (progressEvent) => {
+                        const total = progressEvent.total || file.size;
+                        const current = Math.round((progressEvent.loaded * 100) / total);
+                        setProgress(current);
+                    },
+                }
+            );
+
+            onUploadSuccess(response.data, file.name);
+        } catch (error) {
+            console.error("Error en el transporte de datos. Revisa la conexión con el backend:", error);
+            alert("No se pudo subir el archivo")
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div
+                {...getRootProps()}
+                className={cn(
+                    "border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center transition-all",
+                    isUploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-primary/5 hover:border-primary",
+                    isDragActive ? "bg-primary/10 border-primary" : "border-muted-foreground/25"
+                )}
+            >
+                <input {...getInputProps()}/>
+
+                {isUploading ? (
+                    <div className="flex flex-col items-center w-full max-w-xs">
+                        <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+                        <p>Subiendo dataset: {progress}%</p>
+                        <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-primary transition-all duration-300"
+                                style={{ width: `${progress}%`}}
+                            />
+                        </div>
+                    </div>
+                    ) : (
+                    <div className="text-center">
+                        <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
+                        <p className="font-medium">Arrastra tu dataset aquí</p>
+                        <p className="text-xs text-muted-foreground">CSV, Excel o Parquet</p>
+                    </div>
+                )}
+
             </div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={() => { setFile(null); onDataLoaded([]); }}>
-            <X className="h-4 w-4" />
-          </Button>
         </div>
-      )}
-    </div>
-  )
+    )
 }

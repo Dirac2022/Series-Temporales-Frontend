@@ -4,137 +4,144 @@ import { FileUpload } from "../components/FileUpload"
 import { Label } from "../../../components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { Button } from "../../../components/ui/button"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { CheckCircle2, AlertCircle, Car } from "lucide-react"
 import { ModelSelector } from "../components/ModelSelector"
+import { BackendFileResponse } from "../types/api.types"
 
 export default function TechnicalPage() {
-  const [dataset, setDataset] = React.useState<any[] | null>(null)
   
-  // Estado para el mapeo de columnas
+  // Estado para los metadatos devueltos por el servidor
+  const [metadata, setMetadata] = React.useState<BackendFileResponse | null>(null);
+
+  // Para capturar la intención del usuario
   const [mapping, setMapping] = React.useState({
     timestamp: "",
     target: "",
-  })
+  });
 
-const [modelConfig, setModelConfig] = React.useState<any>(null)
 
-  // Extraemos los nombres de las columnas del primer registro del dataset
-  const columns = dataset && dataset.length > 0 ? Object.keys(dataset[0]) : []
+  const [modelConfig, setModelConfig] = React.useState<any>(null);
+
+  const columns = metadata?.columns || [];
+  const [fileName, setFileName] = React.useState<string>("");
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Configuración de Forecasting</h1>
-        <p className="text-muted-foreground">Prepara los datos para el entrenamiento del modelo.</p>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">Módulo técnico</h1>
+        <p className="text-muted-foreground">Configuración avanzada</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Columna Izquierda: Carga y Configuración (2/3 de ancho) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2 space-y-6">
+          {/* Carga al backend */}
           <Card>
             <CardHeader>
-              <CardTitle>1. Carga de Dataset</CardTitle>
+              <CardTitle>Carga del Dataset</CardTitle>
+              <CardDescription>El archivo será procesado integramente en el motor de ML</CardDescription>
             </CardHeader>
             <CardContent>
-              <FileUpload onDataLoaded={(data) => setDataset(data)} />
+              <FileUpload onUploadSuccess={(data, name) => {
+                setMetadata(data);
+                setFileName(name);
+                }} 
+              />
             </CardContent>
           </Card>
 
-          {dataset && (
-            <Card className="animate-in fade-in slide-in-from-bottom-4">
-              <CardHeader>
-                <CardTitle>2. Mapeo de Columnas</CardTitle>
-                <CardDescription>Define la estructura técnica de tus datos.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Selector de Timestamp */}
-                  <div className="space-y-2">
-                    <Label>Columna de Tiempo (Timestamp)</Label>
-                    <Select onValueChange={(val) => setMapping(prev => ({...prev, timestamp: val}))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar columna..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {columns.map(col => (
-                          <SelectItem key={col} value={col}>{col}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
 
-                  {/* Selector de Target */}
-                  <div className="space-y-2">
-                    <Label>Variable Objetivo (Target)</Label>
-                    <Select onValueChange={(val) => setMapping(prev => ({...prev, target: val}))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar columna..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {columns.map(col => (
-                          <SelectItem key={col} value={col}>{col}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+          {metadata && (
+            <div className="flex items-center gap-2 mb-4 bg-primary/10 border border-primary/20 rounded-md animate-in fade-in">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Dataset cargado: <span className="font-bold">{fileName}</span></span>
+            </div>
+          )}
+          {/* Mapeo de metadatos (si los hay xd)*/}
+          {metadata && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Mapeo de columnas</CardTitle>
+                <CardDescription>Indica cómo se deben interpretar las columnas del dataset</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Columna de tiempo (Requerido)</Label>
+                  <Select onValueChange={(v) => setMapping(p => ({...p, timestamp: v}))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar..."/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {columns.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Variable objetivo (Requerido)</Label>
+                  <Select onValueChange={(v) => setMapping(p => ({...p, target: v}))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar..."/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {columns.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {mapping.target && mapping.timestamp && (
-            <Card className="animate-in fade-in slide-in-from-bottom-4">
-                <CardHeader>
-                    <CardTitle>Selección de Modelo</CardTitle>
-                    <CardDescription>Elige y configura el modelo de forecasting.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ModelSelector onConfigChange={(config) => setModelConfig(config)}/>
-                </CardContent>
+          {/* Modelado */}
+          {mapping.timestamp && mapping.target && (
+            <Card className="animate-in fade-in slide-in-from-botton-4">
+              <CardHeader>
+                <CardTitle>Selección de Algoritmo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ModelSelector onConfigChange={setModelConfig}/>
+              </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Columna Derecha: Resumen de Validación (1/3 de ancho) */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Resumen del Dataset</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Registros:</span>
-                <span className="font-mono">{dataset?.length || 0}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Columnas detectadas:</span>
-                <span className="font-mono">{columns.length}</span>
-              </div>
-              
-              <hr className="border-border" />
-
-              {/* Status de configuración */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  {mapping.timestamp ? <CheckCircle2 className="text-green-500 h-4 w-4" /> : <AlertCircle className="text-yellow-500 h-4 w-4" />}
-                  <span className={mapping.timestamp ? "text-foreground" : "text-muted-foreground"}>Timestamp configurado</span>
+          {/* Panel de resumen */}
+          <aside className="space-y-6">
+            <Card>
+              <CardHeader><CardTitle>Estado del Proceso</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Filas en el servidor:</span>
+                  <span className="font-mono">{metadata?.rowCount.toLocaleString() || 0}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  {mapping.target ? <CheckCircle2 className="text-green-500 h-4 w-4" /> : <AlertCircle className="text-yellow-500 h-4 w-4" />}
-                  <span className={mapping.target ? "text-foreground" : "text-muted-foreground"}>Target configurado</span>
-                </div>
-              </div>
-
-              <Button 
-                className="w-full mt-4" 
-                disabled={!mapping.timestamp || !mapping.target}
-              >
-                Confirmar Configuración
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+                <hr />
+                <ul className="space-y-3">
+                  <StatusItem label="Archivo recibido" isComplete={!!metadata}/>
+                  <StatusItem label="Tiempo Definido" isComplete={!!mapping.timestamp}/>
+                  <StatusItem label="Target Definido" isComplete={!!mapping.target} />
+                </ul>
+                <Button
+                  className="w-full mt-4"
+                  disabled={!mapping.timestamp || !mapping.target || !modelConfig}
+                >
+                  Lanzar Entrenamiento
+                </Button>
+              </CardContent>
+            </Card>
+          </aside>
       </div>
     </div>
+  )
+
+}
+
+function StatusItem({ label, isComplete }: { label: string, isComplete: boolean}) {
+  return (
+    <li className="flex items-center gap-2 text-sm">
+      {isComplete ? (
+        <CheckCircle2 className="h-4 w-4 text-green-500"/>
+      ) : (
+        <AlertCircle className="h-4 w-4 text-muted-foreground opacity-50" />
+      )}
+      <span className={isComplete ? "font-medium" : "text-muted-foreground"}>{label}</span>
+    </li>
   )
 }
