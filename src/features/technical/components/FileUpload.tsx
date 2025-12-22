@@ -10,7 +10,7 @@ interface FileUploadProps {
     onUploadSuccess: (data: BackendFileResponse, originalName: string) => void;
 }
 
-export function FileUpload({ onUploadSuccess}: FileUploadProps) {
+export function FileUpload({ onUploadSuccess }: FileUploadProps) {
     
     const [isUploading, setIsUploading] = React.useState(false);
     const [progress, setProgress] = React.useState(0);

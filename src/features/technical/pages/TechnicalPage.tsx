@@ -13,16 +13,14 @@ export default function TechnicalPage() {
   // Estado para los metadatos devueltos por el servidor
   const [metadata, setMetadata] = React.useState<BackendFileResponse | null>(null);
 
-  // Para capturar la intención del usuario
+  // Estado para el mapeo de columnas
   const [mapping, setMapping] = React.useState({
-    timestamp: "",
-    target: "",
+    timestamp: "", // Columna de tiempo
+    target: "", // Columna objetivo
   });
 
-
-  const [modelConfig, setModelConfig] = React.useState<any>(null);
-
   const columns = metadata?.columns || [];
+  const [modelConfig, setModelConfig] = React.useState<any>(null);
   const [fileName, setFileName] = React.useState<string>("");
 
   return (
