@@ -2,33 +2,35 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { ThemeProvider } from "./context/ThemeProvider"
 import { Header } from  "./components/layout/Header"
 import { Sidebar } from "./components/layout/Sidebar"
-import TechnicalPage from "./features/technical/pages/TechnicalPage"
+import TechnicalPage from "./features/forecasting/pages/ForecastingPage"
+import ResultsPage from "./features/results/pages/ResultsPage"
 
 // Placehoders
-const Home = () => <h2 className="text-2xl font-bold">Dashboard global</h2>
-const Technical = () => <TechnicalPage />
-const Executive = () => <h2 className="text-2xl font-bold">Modulo Ejecutivo</h2>
-const Comparison = () => <h2 className="text-2xl font-bold">Sistema de Coparacion</h2>
+const Home = () => (
+  <div className="space-y-4">
+    <h2 className="text-2xl font-bold text-foreground">Bienvenido a la Plataforma de Predicción</h2>  
+  </div>
+)
 
 function App() {
   return (
     // Proveedor global de tema
     <ThemeProvider defaultTheme="system">
       <Router>
-        {/* Contenedor principal */}
+        {/* CONTENEDOR PRINCIPAL */}
         <div className="min-h-screen bg-background text-foreground font-sans antialiased">
           <Header />
 
           <div className="flex">
-            {/* Sidebar a la izquierda, oculto en movil */}
+            {/* SIDEBAR A LA IZQUIERDA (Oculto en móvil) */}
             <Sidebar />
               <main className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-7xl mx-auto">
                   <Routes>
                     <Route path="/" element={<Home />}/>
-                    <Route path="/technical" element={<TechnicalPage />}/>
-                    <Route path="/executive" element={<Executive />}/>
-                    <Route path="/comparison" element={<Comparison />}/>
+                    <Route path="/forecast" element={<TechnicalPage />}/>
+                    <Route path="/results" element={<ResultsPage />}/>
+                    <Route path="/results/:jobId" element={<ResultsPage />}/>
 
                     {/* Ruta 404 */}
                     <Route path="*" element={

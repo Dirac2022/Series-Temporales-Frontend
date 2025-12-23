@@ -37,8 +37,8 @@ export interface ColumnMapping {
  */
 export interface ForecastConfiguration {
     fileId: string;                     // ID del archivo en el backend
-    mappging: ColumnMapping;            // Mapeo de columnas
-    horizon: ForecastConfiguration;     // Horizonte de predicción
+    mapping: ColumnMapping;            // Mapeo de columnas
+    horizon: ForecastHorizon;     // Horizonte de predicción
 }
 
 /**

@@ -2,9 +2,8 @@ import * as React from "react"
 import { NavLink } from "react-router-dom"
 import { 
     LayoutDashboard,
-    FlaskConical,
-    BarChartHorizontal,
-    GitCompare,
+    TrendingUp,
+    FilePieChart,
     Settings
 } from "lucide-react"
 import { cn } from "../../lib/utils"
@@ -12,9 +11,8 @@ import { cn } from "../../lib/utils"
 // Definimos la estructua de los items de navegacion para que el componente sea mantenible
 const navItems = [
     { name: "Inicio", href: "/", icon: LayoutDashboard },
-    { name: "Módulo Técnico", href: "/technical", icon: FlaskConical },
-    { name: "Modulo Ejecutivo", href: "/executive", icon: BarChartHorizontal },
-    { name: "Comparacion", href: "/comparison", icon: GitCompare },
+    { name: "Generar Predicción", href: "/forecast", icon: TrendingUp },
+    { name: "Resultados", href: "/results", icon: FilePieChart },
 ]
 
 export function Sidebar() {
@@ -40,6 +38,7 @@ export function Sidebar() {
                 ))}
             </div>
 
+            {/* SECCIÓN INFERIOR OPCIONAL PARA AJUSTES DEL SISTEMA */}
             <div className="p-4 border-t">
                 <button className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                     <Settings className="h-4 w-4" />
