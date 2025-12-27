@@ -111,6 +111,7 @@ export default function ForecastingPage() {
       // Navegación a resultados
       // Si el backend aún no retorna un ID, usamos uno termporal para el placeholder
       const jobId = response.data.jobId || "new-forecast-job";
+      window.localStorage.setItem("lastForecastJobId", jobId);
       navigate(`/results/${jobId}`);
     } catch(error) {
       console.error("Error al iniciar la predicción:", error);

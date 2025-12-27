@@ -1,33 +1,174 @@
 import * as React from "react"
 import { useParams, Link } from "react-router-dom"
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
+import axios from "axios"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
 } from "../../../components/ui/card"
 import { Button } from "../../../components/ui/button"
-import { 
-  ArrowLeft, 
-  Loader2, 
-  LineChart, 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
+import {
+  ArrowLeft,
+  Loader2,
+  LineChart as LineChartIcon,
   FileSearch,
   AlertCircle
 } from "lucide-react"
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts"
+
+type JobStatus = "queued" | "running" | "completed" | "failed";
+
+interface ForecastStatusResponse {
+  jobId: string;
+  status: JobStatus;
+  stage: string;
+  message?: string | null;
+  error?: string | null;
+  updatedAt: string;
+}
+
+interface ForecastMetrics {
+  mae?: number | null;
+  rmse?: number | null;
+  mape?: number | null;
+  wape?: number | null;
+}
+
+interface ForecastPrediction {
+  unique_id: string;
+  ds: string;
+  yhat: number;
+}
+
+interface ForecastResultResponse {
+  jobId: string;
+  status: JobStatus;
+  seriesIds: string[];
+  metrics: ForecastMetrics;
+  predictions: ForecastPrediction[];
+}
+
+const LAST_JOB_KEY = "lastForecastJobId";
 
 export default function ResultsPage() {
-  /**
-   * [Explicación A] Captura de parámetros de la URL
-   * Expresión: useParams<{ jobId: string }>()
-   * Justificación: React Router extrae el ID que definimos como :jobId en App.tsx. 
-   * Esto nos permitirá pedir al backend los resultados específicos de esta ejecución.
-   */
   const { jobId } = useParams<{ jobId: string }>();
+  const [resolvedJobId, setResolvedJobId] = React.useState<string | null>(jobId ?? null);
+  const [status, setStatus] = React.useState<ForecastStatusResponse | null>(null);
+  const [results, setResults] = React.useState<ForecastResultResponse | null>(null);
+  const [selectedSeriesId, setSelectedSeriesId] = React.useState<string>("");
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    if (jobId) {
+      window.localStorage.setItem(LAST_JOB_KEY, jobId);
+      setResolvedJobId(jobId);
+      return;
+    }
+    const last = window.localStorage.getItem(LAST_JOB_KEY);
+    if (last) {
+      setResolvedJobId(last);
+    } else {
+      setIsLoading(false);
+    }
+  }, [jobId]);
+
+  React.useEffect(() => {
+    if (!resolvedJobId) return;
+
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+    let isMounted = true;
+    let timer: number | undefined;
+
+    const fetchStatus = async () => {
+      try {
+        const response = await axios.get<ForecastStatusResponse>(`${baseUrl}/forecast/${resolvedJobId}/status`);
+        if (isMounted) {
+          setStatus(response.data);
+          setIsLoading(false);
+          if (response.data.status === "completed" || response.data.status === "failed") {
+            if (timer) {
+              window.clearInterval(timer);
+              timer = undefined;
+            }
+          }
+        }
+      } catch (error) {
+        if (isMounted) {
+          setIsLoading(false);
+          if (timer) {
+            window.clearInterval(timer);
+            timer = undefined;
+          }
+        }
+      }
+    };
+
+    fetchStatus();
+    timer = window.setInterval(fetchStatus, 2000);
+
+    return () => {
+      isMounted = false;
+      if (timer) {
+        window.clearInterval(timer);
+      }
+    };
+  }, [resolvedJobId]);
+
+  React.useEffect(() => {
+    if (!resolvedJobId || status?.status !== "completed") return;
+    if (results?.jobId === resolvedJobId) return;
+
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+    let isMounted = true;
+
+    const fetchResults = async () => {
+      try {
+        const response = await axios.get<ForecastResultResponse>(`${baseUrl}/forecast/${resolvedJobId}`);
+        if (isMounted) {
+          setResults(response.data);
+          if (response.data.seriesIds.length > 0) {
+            setSelectedSeriesId(response.data.seriesIds[0]);
+          }
+        }
+      } catch (error) {
+        if (isMounted) {
+          setResults(null);
+        }
+      }
+    };
+
+    fetchResults();
+    return () => {
+      isMounted = false;
+    };
+  }, [resolvedJobId, results?.jobId, status?.status]);
+
+  const statusLabel = status?.status ?? "queued";
+  const isCompleted = statusLabel === "completed";
+  const isFailed = statusLabel === "failed";
+  const isMissingJob = !resolvedJobId;
+  const isIdle = isMissingJob || (!isLoading && status === null);
+
+  const chartData = React.useMemo(() => {
+    if (!results || !selectedSeriesId) return [];
+    return results.predictions
+      .filter((row) => row.unique_id === selectedSeriesId)
+      .map((row) => ({ ds: row.ds, yhat: row.yhat }));
+  }, [results, selectedSeriesId]);
 
   return (
     <div className="space-y-6">
-      {/* ENCABEZADO Y NAVEGACIÓN DE RETORNO */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
@@ -36,45 +177,64 @@ export default function ResultsPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Análisis de Resultados</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Analisis de Resultados</h1>
             <p className="text-sm text-muted-foreground">
-              Visualización de proyecciones y métricas de precisión
+              Visualizacion de proyecciones y metricas de precision
             </p>
           </div>
         </div>
-        
-        {/* Identificador del proceso visible para soporte técnico o referencia */}
-        {jobId && (
+
+        {resolvedJobId && (
           <div className="hidden sm:block text-right">
             <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
-              ID: {jobId}
+              ID: {resolvedJobId}
             </span>
           </div>
         )}
       </div>
 
-      {/* [Explicación B] Estado de Carga Temporal (Placeholder)
-          Justificación: Mientras no tengamos la conexión real con el backend, 
-          mostramos una interfaz que indica progreso.
-      */}
       <div className="grid grid-cols-1 gap-6">
         <Card className="border-dashed py-12">
           <CardContent className="flex flex-col items-center justify-center text-center space-y-4">
-            <div className="p-4 bg-primary/10 rounded-full">
-              <Loader2 className="h-12 w-12 text-primary animate-spin" />
-            </div>
+            {!isCompleted && !isFailed && !isIdle && (
+              <div className="p-4 bg-primary/10 rounded-full">
+                <Loader2 className="h-12 w-12 text-primary animate-spin" />
+              </div>
+            )}
             <div className="space-y-2">
-              <CardTitle className="text-2xl">Generando Predicciones...</CardTitle>
+              {isIdle ? (
+                <CardTitle className="text-2xl">No hay proceso en curso</CardTitle>
+              ) : isFailed ? (
+                <CardTitle className="text-2xl">La prediccion fallo</CardTitle>
+              ) : isCompleted ? (
+                <CardTitle className="text-2xl">Predicciones completadas</CardTitle>
+              ) : (
+                <CardTitle className="text-2xl">Generando Predicciones...</CardTitle>
+              )}
               <CardDescription className="max-w-md mx-auto">
-                Nuestro motor de Inteligencia Artificial está procesando tus {jobId ? "datos" : "últimas configuraciones"} 
-                para encontrar el modelo con mayor precisión. Esto puede tardar unos segundos.
+                {isIdle && (
+                  <span>Vuelve a la pantalla de prediccion para iniciar un nuevo proceso.</span>
+                )}
+                {isFailed && (
+                  <span>
+                    {status?.error || "El proceso fallo. Revisa los parametros e intenta nuevamente."}
+                  </span>
+                )}
+                {isCompleted && (
+                  <span>El procesamiento termino correctamente. Ya puedes revisar el reporte.</span>
+                )}
+                {!isCompleted && !isFailed && !isIdle && (
+                  <span>
+                    {isLoading ? "Consultando estado del proceso..." : `Estado: ${status?.stage || "en cola"}.`}
+                  </span>
+                )}
               </CardDescription>
             </div>
             <div className="flex gap-3 pt-4">
               <Button variant="outline" asChild>
-                <Link to="/forecast">Cancelar</Link>
+                <Link to="/forecast">Volver</Link>
               </Button>
-              <Button disabled>
+              <Button disabled={!isCompleted || isIdle}>
                 <FileSearch className="mr-2 h-4 w-4" />
                 Ver Reporte Completo
               </Button>
@@ -82,20 +242,46 @@ export default function ResultsPage() {
           </CardContent>
         </Card>
 
-        {/* [Explicación C] Secciones Futuras (Previsualización de Layout)
-            Justificación: Definimos dónde irán los gráficos (Recharts) y las tablas 
-            para que el equipo ya visualice la estructura final.
-        */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-40 grayscale pointer-events-none">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isCompleted ? "" : "opacity-40 grayscale pointer-events-none"}`}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <LineChart className="h-5 w-5" />
-                Gráfico de Proyección
+                <LineChartIcon className="h-5 w-5" />
+                Grafico de Proyeccion
               </CardTitle>
+              {isCompleted && results?.seriesIds.length ? (
+                <div className="pt-2">
+                  <Select value={selectedSeriesId} onValueChange={setSelectedSeriesId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una serie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {results.seriesIds.map((id) => (
+                        <SelectItem key={id} value={id}>
+                          {id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : null}
             </CardHeader>
-            <CardContent className="h-64 flex items-center justify-center border-t">
-              <p className="text-sm italic">Área reservada para gráfico interactivo</p>
+            <CardContent className="h-64 border-t">
+              {isCompleted && chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="ds" hide />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="yhat" stroke="#2563eb" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-sm italic">Area reservada para grafico interactivo</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -103,15 +289,33 @@ export default function ResultsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5" />
-                Métricas de Error
+                Metricas de Error
               </CardTitle>
             </CardHeader>
             <CardContent className="h-64 flex items-center justify-center border-t">
-              <p className="text-sm italic">Área reservada para MAE, RMSE y MAPE</p>
+              {isCompleted && results ? (
+                <div className="w-full max-w-xs space-y-3">
+                  <MetricRow label="MAE" value={results.metrics.mae} />
+                  <MetricRow label="RMSE" value={results.metrics.rmse} />
+                  <MetricRow label="MAPE" value={results.metrics.mape} />
+                  <MetricRow label="WAPE" value={results.metrics.wape} />
+                </div>
+              ) : (
+                <p className="text-sm italic">Area reservada para MAE, RMSE y MAPE</p>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
+    </div>
+  )
+}
+
+function MetricRow({ label, value }: { label: string; value?: number | null }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-mono">{value == null ? "--" : value.toFixed(4)}</span>
     </div>
   )
 }

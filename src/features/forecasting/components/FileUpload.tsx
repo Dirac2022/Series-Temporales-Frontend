@@ -38,8 +38,9 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
         setProgress(0);
 
         try{
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
             const response = await axios.post<BackendFileResponse>(
-                `${import.meta.env.VITE_API_BASE_URL}/upload`,
+                `${baseUrl}/upload`,
                 formData,
                 {
                     headers: { 'Content-Type': 'multipart/form-data' },
@@ -75,7 +76,7 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
                 {isUploading ? (
                     <div className="flex flex-col items-center w-full max-w-xs">
                         <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
-                        <p>Subiendo dataset: {progress}%</p>
+                        <p>Enviando archivo: {progress}%</p>
                         <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-primary transition-all duration-300"
