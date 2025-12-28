@@ -4,6 +4,8 @@ import { Header } from  "./components/layout/Header"
 import { Sidebar } from "./components/layout/Sidebar"
 import TechnicalPage from "./features/forecasting/pages/ForecastingPage"
 import ResultsPage from "./features/results/pages/ResultsPage"
+import { logger } from "./services/logger"
+import { useEffect } from "react"
 
 // Placehoders
 const Home = () => (
@@ -13,6 +15,34 @@ const Home = () => (
 )
 
 function App() {
+  // Prueba del logger al iniciar el app
+  useEffect(() => {
+    // Log de inicio de aplicación
+    logger.info("APP", "Aplicación iniciada correctamente");
+
+    // Log con datos adicionales
+    logger.info("APP", "Información del entorno", {
+      mode: import.meta.env.MODE,
+      apiUrl: import.meta.env.VITE_API_BASE_URL,
+      timestamp: new Date().toISOString()
+    });
+
+    // Log de warning
+    logger.warn("APP", "Esta es una prueba de warning");
+
+    // Log de error
+    logger.error("APP", "Prueba de envío de error al backend", {
+      test: true,
+      errorType: "test",
+      additionalInfo: "Este erro debería aparecer en los logs del backend"
+    });
+
+    // Log de debug (solo visible en desarrollo)
+    logger.debug("APP", "Logger system test completed", {
+      features: ["console", "localStorage", "backend"]
+    });
+  }, []);
+
   return (
     // Proveedor global de tema
     <ThemeProvider defaultTheme="system">

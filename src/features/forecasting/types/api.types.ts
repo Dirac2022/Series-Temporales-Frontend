@@ -50,3 +50,18 @@ export interface HorizonValidation {
     isValid: boolean;                   // ¿El valor actual es válido?
     warningMessage?: string;            // Mensaje si excede lo recomendado
 }
+
+
+// ===========================================================
+// PÁGINA DE RESULTADOS ResultsPage.tsx
+// ===========================================================
+
+type JobStatus = "queued" | "running" | "completed" | "failed"
+
+export interface ForecastStatusResponse {
+    jobId: string;
+    status: JobStatus;
+    stage: string;
+    message?: string | null;
+    error?: string | null
+}
