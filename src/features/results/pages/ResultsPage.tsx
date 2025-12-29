@@ -1,31 +1,12 @@
 import * as React from "react"
 import { useParams, Link } from "react-router-dom"
 import axios from "axios"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from "../../../components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription} from "../../../components/ui/card"
 import { Button } from "../../../components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
-import {
-  ArrowLeft,
-  Loader2,
-  LineChart as LineChartIcon,
-  FileSearch,
-  AlertCircle
-} from "lucide-react"
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts"
+import { ArrowLeft, Loader2, LineChart as LineChartIcon, FileSearch, AlertCircle} from "lucide-react"
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts"
+import { STORAGE_KEYS, POLLING, API } from "../../../config/constants"
 
 type JobStatus = "queued" | "running" | "completed" | "failed";
 
@@ -59,7 +40,6 @@ interface ForecastResultResponse {
   predictions: ForecastPrediction[];
 }
 
-const LAST_JOB_KEY = "lastForecastJobId";
 
 export default function ResultsPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -71,11 +51,11 @@ export default function ResultsPage() {
 
   React.useEffect(() => {
     if (jobId) {
-      window.localStorage.setItem(LAST_JOB_KEY, jobId);
+      window.localStorage.setItem(STORAGE_KEYS.LAST_FORECAST_JOB, jobId);
       setResolvedJobId(jobId);
       return;
     }
-    const last = window.localStorage.getItem(LAST_JOB_KEY);
+    const last = window.localStorage.getItem(STORAGE_KEYS.LAST_FORECAST_JOB);
     if (last) {
       setResolvedJobId(last);
     } else {
@@ -85,14 +65,12 @@ export default function ResultsPage() {
 
   React.useEffect(() => {
     if (!resolvedJobId) return;
-
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
     let isMounted = true;
     let timer: number | undefined;
 
     const fetchStatus = async () => {
       try {
-        const response = await axios.get<ForecastStatusResponse>(`${baseUrl}/forecast/${resolvedJobId}/status`);
+        const response = await axios.get<ForecastStatusResponse>(`${API.BASE_URL}/forecast/${resolvedJobId}/status`);
         if (isMounted) {
           setStatus(response.data);
           setIsLoading(false);
@@ -115,7 +93,7 @@ export default function ResultsPage() {
     };
 
     fetchStatus();
-    timer = window.setInterval(fetchStatus, 2000);
+    timer = window.setInterval(fetchStatus, POLLING.INTERVAL_MS);
 
     return () => {
       isMounted = false;
@@ -129,12 +107,11 @@ export default function ResultsPage() {
     if (!resolvedJobId || status?.status !== "completed") return;
     if (results?.jobId === resolvedJobId) return;
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
     let isMounted = true;
 
     const fetchResults = async () => {
       try {
-        const response = await axios.get<ForecastResultResponse>(`${baseUrl}/forecast/${resolvedJobId}`);
+        const response = await axios.get<ForecastResultResponse>(`${API.BASE_URL}/forecast/${resolvedJobId}`);
         if (isMounted) {
           setResults(response.data);
           if (response.data.seriesIds.length > 0) {

@@ -10,6 +10,7 @@ import { Button } from "../../../components/ui/button"
 import { CheckCircle2, AlertCircle, TrendingUp, Calendar } from "lucide-react"
 import { SeriesIdentifierSelector } from "../components/SeriesIdentifierSelector"
 import { BackendFileResponse, ForecastHorizon, TimeUnit, ForecastConfiguration } from "../types/api.types"
+import { API, DAY_EQUIVALENCE, STORAGE_KEYS, UNIT_LABELS, VALIDATION } from "../../../config/constants"
 
 export default function ForecastingPage() {
 
@@ -45,11 +46,6 @@ export default function ForecastingPage() {
   // filter(Boolean) evita valores vaciios. Previene errores cuando el usario aún no seleccionó
   const excludedColumns = [mapping.timestamp, mapping.target].filter(Boolean)
 
-  const DAYS_PER_UNIT: Record<TimeUnit, number> = {
-    days: 1,
-    weeks: 7,
-    months: 30
-  }
 
   // Flexible por si el horizonte es diario | semanal | mensual
   // El horizonte máximo es el 10% del tamaño del dataset. Se asume frecuencia
@@ -57,23 +53,14 @@ export default function ForecastingPage() {
   const maxRecommendedHorizon = React.useMemo(() => {
     if (!metadata) return 0;
 
-    const maxDays = Math.floor(metadata.rowCount * 0.1);
+    const maxDays = Math.floor(metadata.rowCount * VALIDATION.MAX_HORIZON_PERCENTAGE);
     return Math.max(
       1,
-      Math.floor(maxDays / DAYS_PER_UNIT[horizon.unit])
+      Math.floor(maxDays / DAY_EQUIVALENCE[horizon.unit])
     );
   }, [metadata, horizon.unit])
 
   const isHorizonValid = horizon.value <= maxRecommendedHorizon;
-
-  // Traducción de unidades temporales a español
-  const unitLabels = {
-    days: 'dias',
-    weeks: 'semanas',
-    months: 'meses'
-  } as const;
-
-  // const [modelConfig, setModelConfig] = React.useState<any>(null);
 
   // Handler cuando se carga exitosamente un archivo
   const handleUploadSuccess = (data: BackendFileResponse, name: string) => {
@@ -103,15 +90,13 @@ export default function ForecastingPage() {
       horizon: horizon
     };
 
-    // TODO: Implementar endpoint en backend
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
-      const response = await axios.post(`${baseUrl}/forecast`, config);       // Envio de metadata al backend
+      const response = await axios.post(`${API.BASE_URL}/forecast`, config)
       
       // Navegación a resultados
       // Si el backend aún no retorna un ID, usamos uno termporal para el placeholder
       const jobId = response.data.jobId || "new-forecast-job";
-      window.localStorage.setItem("lastForecastJobId", jobId);
+      window.localStorage.setItem(STORAGE_KEYS.LAST_FORECAST_JOB, jobId);
       navigate(`/results/${jobId}`);
     } catch(error) {
       console.error("Error al iniciar la predicción:", error);
@@ -256,9 +241,9 @@ export default function ForecastingPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {/* OPCIONES HARDCODEADAS, YA QUE SON SOLO 3 OPCIONES QUE PROBABLEMENTE NO CAMBIARÁN */}
-                          <SelectItem value="days">{unitLabels.days}</SelectItem>
-                          <SelectItem value="weeks">{unitLabels.weeks}</SelectItem>
-                          <SelectItem value="months">{unitLabels.months}</SelectItem>
+                          <SelectItem value="days">{UNIT_LABELS.days}</SelectItem>
+                          <SelectItem value="weeks">{UNIT_LABELS.weeks}</SelectItem>
+                          <SelectItem value="months">{UNIT_LABELS.months}</SelectItem>
                         </SelectContent>
                       </Select>
                   </div>
@@ -274,7 +259,7 @@ export default function ForecastingPage() {
                     <div className="text-sm text-yellow-900 dark:text-yellow-100">
                       <p className="font-medium">Horizonte muy largo</p>
                       <p className="text-yellow-700 dark:text-yellow-300">
-                        Se recomienda máximo {maxRecommendedHorizon} {unitLabels[horizon.unit]}
+                        Se recomienda máximo {maxRecommendedHorizon} {UNIT_LABELS[horizon.unit]}
                         {" "}basado en tu histórico. Predicciones muy lejandas pueden ser menos precisas
                       </p>
                     </div>
@@ -284,7 +269,7 @@ export default function ForecastingPage() {
                  {/* RECOMENDACIÓN */}
                  <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
                   <strong>Recomendación:</strong> El horizonte óptimo es hasta el 20% del
-                  {" "}(~{maxRecommendedHorizon} {unitLabels[horizon.unit]} en tu caso.)
+                  {" "}(~{maxRecommendedHorizon} {UNIT_LABELS[horizon.unit]} en tu caso.)
                  </div>
               </CardContent>
             </Card>
