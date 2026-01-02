@@ -17,7 +17,7 @@
 import axios, { AxiosError } from "axios";
 import { logger } from "../../services/logger";
 import { AppError, ApiError, NetworkError, TimeoutError, ValidationError } from "./types";
-import { LogModule } from "../../services/logger";
+import type { LogModule } from "../../services/logger";
 
 /**
  * Información extraída de un error para mostrar al usuario

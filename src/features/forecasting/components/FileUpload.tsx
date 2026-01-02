@@ -1,10 +1,11 @@
 import * as React from "react"
 import { useDropzone } from "react-dropzone"
-import { Upload, FileText, X, Loader2 } from "lucide-react"
+import { Upload, Loader2 } from "lucide-react" 
+// TODO: // FileText from "lucide-react" como vista cuando se carga un archivo
 import axios from "axios"
 import { cn } from "../../../lib/utils"
-import { Button } from "../../../components/ui/button"
-import { BackendFileResponse } from "../types/api.types"
+// import { Button } from "../../../components/ui/button"
+import type { BackendFileResponse } from "../types/api.types"
 
 interface FileUploadProps {
     onUploadSuccess: (data: BackendFileResponse, originalName: string) => void;

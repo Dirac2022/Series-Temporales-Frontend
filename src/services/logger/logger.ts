@@ -3,7 +3,7 @@
  * Persistencia en localstorage
  * Envio de errores críticos al backend
  */
-import { LogLevel, LogModule, LogEntry, LoggerConfig, BackendLogPayload } from "./types"
+import type { LogLevel, LogModule, LogEntry, LoggerConfig, BackendLogPayload } from "./types"
 
 
 /**
@@ -29,12 +29,11 @@ const DEFAULT_CONFIG: LoggerConfig = {
     showModule: true,
     persistToLocalStorage: import.meta.env.MODE !== "production",
     maxLocalStorageLogs: 100,
-    sendErrorsToBackend: true,  // Enviar errores siempre (dev y prod)
-    backendLogEndpoint: import.meta.env.VITE_API_BASE_URL 
-        ? `${import.meta.env.VITE_API_BASE_URL}/logs/frontend`
-        : "http://localhost:8000/api/v1/logs/frontend"
+    // sendErrorsToBackend: import.meta.env.MODE === "production",
+    sendErrorsToBackend: true,
+    backendLogEndpoint: `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1"}/logs/frontend`,
 };
-// VITE_API_BASE_URL=http://localhost:8000/api/v1
+
 /**
  * Mapeo de niveles a prioridad numérica
  */

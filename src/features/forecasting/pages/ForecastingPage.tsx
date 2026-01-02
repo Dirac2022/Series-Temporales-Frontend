@@ -9,7 +9,7 @@ import { Input } from "../../../components/ui/input"
 import { Button } from "../../../components/ui/button"
 import { CheckCircle2, AlertCircle, TrendingUp, Calendar } from "lucide-react"
 import { SeriesIdentifierSelector } from "../components/SeriesIdentifierSelector"
-import { BackendFileResponse, ForecastHorizon, TimeUnit, ForecastConfiguration } from "../types/api.types"
+import type { BackendFileResponse, ForecastHorizon, TimeUnit, ForecastConfiguration } from "../types/api.types"
 import { API, DAY_EQUIVALENCE, STORAGE_KEYS, UNIT_LABELS, VALIDATION } from "../../../config/constants"
 
 export default function ForecastingPage() {
