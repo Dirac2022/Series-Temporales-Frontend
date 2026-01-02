@@ -4,7 +4,7 @@ import axios from "axios"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription} from "../../../components/ui/card"
 import { Button } from "../../../components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
-import { ArrowLeft, Loader2, LineChart as LineChartIcon, FileSearch, AlertCircle} from "lucide-react"
+import { ArrowLeft, Loader2, LineChart as LineChartIcon, FileSearch } from "lucide-react"
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts"
 import { STORAGE_KEYS, POLLING, API } from "../../../config/constants"
 
@@ -32,12 +32,19 @@ interface ForecastPrediction {
   yhat: number;
 }
 
+interface ForecastHistoryPoint {
+  unique_id: string;
+  ds: string;
+  y: number;
+}
+
 interface ForecastResultResponse {
   jobId: string;
   status: JobStatus;
   seriesIds: string[];
   metrics: ForecastMetrics;
   predictions: ForecastPrediction[];
+  history: ForecastHistoryPoint[];
 }
 
 
@@ -136,12 +143,40 @@ export default function ResultsPage() {
   const isFailed = statusLabel === "failed";
   const isMissingJob = !resolvedJobId;
   const isIdle = isMissingJob || (!isLoading && status === null);
+  const numberFormatter = React.useMemo(
+    () => new Intl.NumberFormat("es-PE", { maximumFractionDigits: 2 }),
+    []
+  );
+
+  const formatDate = React.useCallback((value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("es-PE");
+  }, []);
 
   const chartData = React.useMemo(() => {
     if (!results || !selectedSeriesId) return [];
-    return results.predictions
+    const merged = new Map<string, { ds: string; actual?: number; yhat?: number }>();
+
+    results.history
       .filter((row) => row.unique_id === selectedSeriesId)
-      .map((row) => ({ ds: row.ds, yhat: row.yhat }));
+      .forEach((row) => {
+        merged.set(row.ds, { ds: row.ds, actual: row.y });
+      });
+
+    results.predictions
+      .filter((row) => row.unique_id === selectedSeriesId)
+      .forEach((row) => {
+        const existing = merged.get(row.ds);
+        merged.set(row.ds, { ds: row.ds, actual: existing?.actual, yhat: row.yhat });
+      });
+
+    return Array.from(merged.values()).sort((a, b) => {
+      const da = new Date(a.ds).getTime();
+      const db = new Date(b.ds).getTime();
+      if (Number.isNaN(da) || Number.isNaN(db)) return a.ds.localeCompare(b.ds);
+      return da - db;
+    });
   }, [results, selectedSeriesId]);
 
   return (
@@ -219,12 +254,12 @@ export default function ResultsPage() {
           </CardContent>
         </Card>
 
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isCompleted ? "" : "opacity-40 grayscale pointer-events-none"}`}>
+        <div className={`grid grid-cols-1 gap-6 ${isCompleted ? "" : "opacity-40 grayscale pointer-events-none"}`}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <LineChartIcon className="h-5 w-5" />
-                Grafico de Proyeccion
+                Grafico de Serie y Proyeccion
               </CardTitle>
               {isCompleted && results?.seriesIds.length ? (
                 <div className="pt-2">
@@ -243,43 +278,65 @@ export default function ResultsPage() {
                 </div>
               ) : null}
             </CardHeader>
-            <CardContent className="h-64 border-t">
+            <CardContent className="border-t">
               {isCompleted && chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="ds" hide />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="yhat" stroke="#2563eb" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="h-80 md:h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="ds" tickFormatter={formatDate} />
+                      <YAxis
+                        tickFormatter={(value) => numberFormatter.format(value)}
+                        label={{ value: "Unidades", angle: -90, position: "insideLeft" }}
+                      />
+                    <Tooltip
+                      content={({ active, label, payload }) => {
+                        if (!active || !payload || payload.length === 0) return null;
+                        return (
+                          <div className="rounded-md border bg-background px-3 py-2 shadow-sm">
+                            <div className="text-xs font-medium text-foreground">
+                              Fecha: {formatDate(String(label))}
+                            </div>
+                            <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                              {payload.map((entry) => {
+                                const name = entry.name === "actual" ? "Serie" : "Pronostico";
+                                return (
+                                  <div key={entry.dataKey} className="flex items-center justify-between gap-3">
+                                    <span>{name}</span>
+                                    <span className="font-mono text-foreground">
+                                      {numberFormatter.format(Number(entry.value))} unidades
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      }}
+                    />
+                      <Line type="monotone" dataKey="actual" stroke="#0f766e" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="yhat" stroke="#2563eb" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               ) : (
-                <div className="h-full flex items-center justify-center">
+                <div className="h-80 md:h-96 flex items-center justify-center">
                   <p className="text-sm italic">Area reservada para grafico interactivo</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
-                Metricas de Error
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="h-64 flex items-center justify-center border-t">
-              {isCompleted && results ? (
-                <div className="w-full max-w-xs space-y-3">
-                  <MetricRow label="MAE" value={results.metrics.mae} />
-                  <MetricRow label="RMSE" value={results.metrics.rmse} />
-                  <MetricRow label="MAPE" value={results.metrics.mape} />
-                  <MetricRow label="WAPE" value={results.metrics.wape} />
-                </div>
-              ) : (
-                <p className="text-sm italic">Area reservada para MAE, RMSE y MAPE</p>
-              )}
+              <div className="mt-6 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
+                {isCompleted && results ? (
+                  <>
+                    <MetricRow label="MAE" value={results.metrics.mae} />
+                    <MetricRow label="RMSE" value={results.metrics.rmse} />
+                    <MetricRow label="MAPE" value={results.metrics.mape} />
+                    <MetricRow label="WAPE" value={results.metrics.wape} />
+                  </>
+                ) : (
+                  <p className="col-span-2 text-xs italic">Metricas disponibles al finalizar el proceso</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -290,7 +347,7 @@ export default function ResultsPage() {
 
 function MetricRow({ label, value }: { label: string; value?: number | null }) {
   return (
-    <div className="flex items-center justify-between text-sm">
+    <div className="flex items-center justify-between text-xs">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-mono">{value == null ? "--" : value.toFixed(4)}</span>
     </div>
