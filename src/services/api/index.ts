@@ -6,7 +6,7 @@
  * Centraliza las exportaciones de servicios de API
  */
 
-// export { forecastService } from "./forecastService"
+export { forecastService } from "./forecastService"
 export type {
     UploadResponse,
     ForecastStartResponse,
