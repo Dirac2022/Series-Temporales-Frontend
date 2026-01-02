@@ -9,13 +9,13 @@ export interface BackendFileResponse {
 }
 
 /**
- * Unidades temporales soportadas para el horizonte de predicción
+ * Unidades temporales soportadas para el horizonte de predicci??n
  */
 export type TimeUnit = 'days' | 'weeks' | 'months';
 
 
 /**
- * El horizonte define cuánto tiempo adelante queremos predecir
+ * El horizonte define cu??nto tiempo adelante queremos predecir
  */ 
 export interface ForecastHorizon {
     value: number;      // Cantidad de periodos
@@ -24,7 +24,7 @@ export interface ForecastHorizon {
 
 
 /**
- * Configuración completa del mapping de columnas del dataset
+ * Configuraci??n completa del mapping de columnas del dataset
  */
 export interface ColumnMapping {
     timestamp: string;              // Columna de fecha/tiempo (obligatorio)
@@ -33,27 +33,27 @@ export interface ColumnMapping {
 }
 
 /**
- * Configuración completa para enviar al backend
+ * Configuraci??n completa para enviar al backend
  */
 export interface ForecastConfiguration {
     fileId: string;                     // ID del archivo en el backend
     mapping: ColumnMapping;            // Mapeo de columnas
-    horizon: ForecastHorizon;     // Horizonte de predicción
+    horizon: ForecastHorizon;     // Horizonte de predicci??n
 }
 
 /**
  * Validaciones predefinidas para el horizonte
- * Como guía para el usuario
+ * Como gu??a para el usuario
  */
 export interface HorizonValidation {
-    maxRecommended: number;             // Máximo recomendado de periodos (20% del histórico)
-    isValid: boolean;                   // ¿El valor actual es válido?
+    maxRecommended: number;             // Maximo recomendado de periodos (porcentaje del historico)
+    isValid: boolean;                   // ??El valor actual es v??lido?
     warningMessage?: string;            // Mensaje si excede lo recomendado
 }
 
 
 // ===========================================================
-// PÁGINA DE RESULTADOS ResultsPage.tsx
+// P??GINA DE RESULTADOS ResultsPage.tsx
 // ===========================================================
 
 type JobStatus = "queued" | "running" | "completed" | "failed"

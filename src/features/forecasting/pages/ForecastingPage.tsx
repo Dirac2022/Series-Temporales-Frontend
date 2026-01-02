@@ -31,7 +31,7 @@ export default function ForecastingPage() {
   // Identificadores de series
   const [seriesIdentifiers, setSeriesIdentifiers] = React.useState<string[]>([]);
 
-  // Horizonte de predicción
+  // Horizonte de predicci??n
   // Valores por defecto: Prediccion de 4 semanas
   const [horizon, setHorizon] = React.useState<ForecastHorizon>({
     value: 4,
@@ -43,22 +43,28 @@ export default function ForecastingPage() {
 
 
   // Columnas que no se pueden usar como identificadores 
-  // filter(Boolean) evita valores vaciios. Previene errores cuando el usario aún no seleccionó
+  // filter(Boolean) evita valores vaciios. Previene errores cuando el usario a??n no seleccion??
   const excludedColumns = [mapping.timestamp, mapping.target].filter(Boolean)
 
 
-  // Flexible por si el horizonte es diario | semanal | mensual
-  // El horizonte máximo es el 10% del tamaño del dataset. Se asume frecuencia
-  // diaria.
+  const estimatedSeriesCount = React.useMemo(() => {
+    if (!metadata) return 1;
+    if (seriesIdentifiers.length === 0) return 1;
+    return Math.min(metadata.rowCount, Math.pow(10, seriesIdentifiers.length));
+  }, [metadata, seriesIdentifiers.length]);
+
+  // Flexible por si el horizonte es diario | semanal | mensual.
+  // Calcula el maximo recomendado usando el historico promedio por serie.
   const maxRecommendedHorizon = React.useMemo(() => {
     if (!metadata) return 0;
 
-    const maxDays = Math.floor(metadata.rowCount * VALIDATION.MAX_HORIZON_PERCENTAGE);
+    const rowsPerSeries = Math.max(1, Math.floor(metadata.rowCount / estimatedSeriesCount));
+    const maxDays = Math.floor(rowsPerSeries * VALIDATION.MAX_HORIZON_PERCENTAGE);
     return Math.max(
       1,
       Math.floor(maxDays / DAY_EQUIVALENCE[horizon.unit])
     );
-  }, [metadata, horizon.unit])
+  }, [metadata, horizon.unit, estimatedSeriesCount]);
 
   const isHorizonValid = horizon.value <= maxRecommendedHorizon;
 
@@ -68,18 +74,18 @@ export default function ForecastingPage() {
     setFileName(name);
   };
 
-  // Condiciones para habilitar el botón de predicción
+  // Condiciones para habilitar el bot??n de predicci??n
   const canGenerateForecast = metadata !== null &&
     mapping.timestamp !== "" &&
     mapping.target !== "" &&
     seriesIdentifiers.length > 0 &&
     isHorizonValid;
 
-  // Handler para generar predicción
+  // Handler para generar predicci??n
   const handleGenerateForecast = async () => {
     if (!canGenerateForecast || !metadata) return;
 
-    // Construcción del Payload según el contrato definido en api.types.ts
+    // Construcci??n del Payload seg??n el contrato definido en api.types.ts
     const config: ForecastConfiguration = {
       fileId: metadata.fileId,
       mapping: {
@@ -93,13 +99,13 @@ export default function ForecastingPage() {
     try {
       const response = await axios.post(`${API.BASE_URL}/forecast`, config)
       
-      // Navegación a resultados
-      // Si el backend aún no retorna un ID, usamos uno termporal para el placeholder
+      // Navegaci??n a resultados
+      // Si el backend a??n no retorna un ID, usamos uno termporal para el placeholder
       const jobId = response.data.jobId || "new-forecast-job";
       window.localStorage.setItem(STORAGE_KEYS.LAST_FORECAST_JOB, jobId);
       navigate(`/results/${jobId}`);
     } catch(error) {
-      console.error("Error al iniciar la predicción:", error);
+      console.error("Error al iniciar la predicci??n:", error);
       alert("Error al conectar con el motor de ML. Verifica la consola");
     }
   };
@@ -107,23 +113,23 @@ export default function ForecastingPage() {
 
   return (
     <div className="space-y-6">
-      {/* ENCABEZADO DE PÁGINA */}
+      {/* ENCABEZADO DE P??GINA */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Generar Predicción</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Generar Predicci??n</h1>
         <p className="text-muted-foreground">
-          Carga tus datos históricos y configura los parámetros de predicción
+          Carga tus datos hist??ricos y configura los par??metros de predicci??n
         </p>
       </div>
 
       {/* LAYOUT PRINCIPAL: 2 COLUMNAS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* COLUMNA IZQUIERDA: CONFIGURACIÓN */}
+        {/* COLUMNA IZQUIERDA: CONFIGURACI??N */}
         <div className="md:col-span-2 space-y-6">
           {/* CARGA DE DATOS HACIA EL BACKEND */}
           <Card>
             <CardHeader>
-              <CardTitle>Cargar Datos Históricos</CardTitle>
-              <CardDescription>Sube un archivo con tu histórico</CardDescription>
+              <CardTitle>Cargar Datos Hist??ricos</CardTitle>
+              <CardDescription>Sube un archivo con tu hist??rico</CardDescription>
             </CardHeader>
             <CardContent>
               <FileUpload onUploadSuccess={(data, name) => {
@@ -134,7 +140,7 @@ export default function ForecastingPage() {
             </CardContent>
           </Card>
 
-          {/* MENSAJE DE ÉXITO (Condicional) */}
+          {/* MENSAJE DE ??XITO (Condicional) */}
           {metadata && (
             <div className="flex items-center gap-2 mb-4 bg-primary/10 border border-primary/20 rounded-md animate-in fade-in">
               <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -203,16 +209,16 @@ export default function ForecastingPage() {
           )}
 
           { /**
-           * HORIZONTE DE PREDICCIÓN
+           * HORIZONTE DE PREDICCI??N
            * Datos -> Mapeo -> identificadores -> HORIZONTE
            * No se abruma al usuario con todo a la vez
            */}
            {seriesIdentifiers.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Horizonte de predicción</CardTitle>
+                <CardTitle>Horizonte de predicci??n</CardTitle>
                 <CardDescription>
-                  ¿Cuánto tiempo adelante quieres predecir?
+                  ??Cu??nto tiempo adelante quieres predecir?
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -240,7 +246,7 @@ export default function ForecastingPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* OPCIONES HARDCODEADAS, YA QUE SON SOLO 3 OPCIONES QUE PROBABLEMENTE NO CAMBIARÁN */}
+                          {/* OPCIONES HARDCODEADAS, YA QUE SON SOLO 3 OPCIONES QUE PROBABLEMENTE NO CAMBIAR??N */}
                           <SelectItem value="days">{UNIT_LABELS.days}</SelectItem>
                           <SelectItem value="weeks">{UNIT_LABELS.weeks}</SelectItem>
                           <SelectItem value="months">{UNIT_LABELS.months}</SelectItem>
@@ -259,16 +265,16 @@ export default function ForecastingPage() {
                     <div className="text-sm text-yellow-900 dark:text-yellow-100">
                       <p className="font-medium">Horizonte muy largo</p>
                       <p className="text-yellow-700 dark:text-yellow-300">
-                        Se recomienda máximo {maxRecommendedHorizon} {UNIT_LABELS[horizon.unit]}
-                        {" "}basado en tu histórico. Predicciones muy lejandas pueden ser menos precisas
+                        Se recomienda maximo {maxRecommendedHorizon} {UNIT_LABELS[horizon.unit]}
+                        {" "}basado en el historico promedio por serie. Predicciones muy lejanas pueden ser menos precisas
                       </p>
                     </div>
                   </div>
                  )}
 
-                 {/* RECOMENDACIÓN */}
+                 {/* RECOMENDACI??N */}
                  <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
-                  <strong>Recomendación:</strong> El horizonte óptimo es hasta el 20% del
+                  <strong>Recomendacion:</strong> El horizonte recomendado es hasta el {Math.round(VALIDATION.MAX_HORIZON_PERCENTAGE * 100)}% del historico promedio por serie
                   {" "}(~{maxRecommendedHorizon} {UNIT_LABELS[horizon.unit]} en tu caso.)
                  </div>
               </CardContent>
@@ -295,16 +301,16 @@ export default function ForecastingPage() {
                 <StatusItem label="Identificadores definidos" isComplete={seriesIdentifiers.length > 0} />
                 <StatusItem label="Horizonte configurado" isComplete={isHorizonValid} />
               </ul>
-              {/* BOTÓN PRINCIPAL */}
+              {/* BOT??N PRINCIPAL */}
               <Button
                 className="w-full mt-4"
                 disabled={!canGenerateForecast}
                 onClick={handleGenerateForecast}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
-                Generar Predicción
+                Generar Predicci??n
               </Button>
-              {/* MENSAJE DE AYUDA (botón deshabilitado) */}
+              {/* MENSAJE DE AYUDA (bot??n deshabilitado) */}
               {!canGenerateForecast && (
                 <p className="text-xs text-muted-foreground text-center mt-2">
                   Completa todos los pasos para continuar
@@ -320,7 +326,7 @@ export default function ForecastingPage() {
 }
 
 // Componente auxiliar
-// Componente pequeño para items del checklist
+// Componente peque??o para items del checklist
 function StatusItem({ label, isComplete }: { label: string, isComplete: boolean }) {
   return (
     <li className="flex items-center gap-2 text-sm">
@@ -333,3 +339,5 @@ function StatusItem({ label, isComplete }: { label: string, isComplete: boolean 
     </li>
   )
 }
+
+
