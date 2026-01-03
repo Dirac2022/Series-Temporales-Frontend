@@ -4,13 +4,57 @@
   import { Button } from "../../../components/ui/button"
   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
   import { ArrowLeft, Loader2, LineChart as LineChartIcon, FileSearch, AlertCircle} from "lucide-react"
-  import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts"
+  import { CartesianGrid, Line, ReferenceLine, Area, ResponsiveContainer, Tooltip, XAxis, YAxis, ComposedChart} from "recharts"
   import { STORAGE_KEYS } from "../../../config/constants"
   import { forecastService } from "../../../services/api"
   import { handleError, getErrorInfo } from "../../../lib/errors"
   import { logger } from "../../../services/logger"
   import { useForecastStatus } from "../hooks/useForecastStatus"
   import type { ForecastResultResponse } from "../../../services/api"
+
+  /**
+   * Esta es la forma de algunas interfaces de services/api
+   * 
+    * Una predicción individual
+   export interface ForecastPrediction {
+       unique_id: string;          // ID de la serie temporal
+       ds: string;                 // Fecha (date string)
+       yhat: number;               // Valor predicho
+   
+       // Intervalos de confianza (opcionales)
+       y_lower?: number;        // Limite infererior del intervalo
+       y_upper?: number;       // Limite superior del intervalo
+       confidence_level?: number;    
+   }
+   
+
+    * Punto de datos históricos
+   export interface HistoricalDataPoint {
+       unique_id: string;
+       ds: string;
+       y: number;
+   }
+   
+   
+    * Response del endpoint GET /forecast/{jobId}
+   export interface ForecastResultResponse {
+       jobId: string;
+       status: ForecastJobStatus;
+       seriesIds: string[];
+       metrics: ForecastMetrics;
+       predictions: ForecastPrediction[];
+   
+       history: HistoricalDataPoint[];
+   
+       // Datos opcionales
+       // Esto podría ser útil
+       modelInfo?: {
+           modelType: string;          // Modelo usado (NBEATS, TFT, etc.)
+           trainedAt: string;          // ISO timestamp
+           trainingDuration?: number   // Duración
+       }
+   }
+   */
 
   export default function ResultsPage() {
 
@@ -49,7 +93,7 @@
         logger.info("RESULTS", "jobId recuperado de localStorage", { jobId: last });
         setResolvedJobId(last);
       } else {
-        logger.warn("RESULTS", "No hya jobId disponible");
+        logger.warn("RESULTS", "No hay jobId disponible");
         setResolvedJobId(null);
       }
     }, [jobId]);
@@ -73,13 +117,14 @@
         setIsLoadingResults(true);
 
         try {
-          logger.info("RESULTS", "Obtenieod resultados del forecast", { jobId: resolvedJobId });
+          logger.info("RESULTS", "Obteniendo resultados del forecast", { jobId: resolvedJobId });
 
           // Usar el servicio de API (logging automático)
           const data = await forecastService.getForecastResults(resolvedJobId);
 
           if (isMounted) {
             setResults(data);
+            logger.info("RESULTS", "Resultado del forecast", { data })
 
             // Seleccionar primera serie por defecto
             if (data.seriesIds.length > 0) {
@@ -141,7 +186,7 @@
     const chartData = useMemo(() => {
       if (!results || !selectedSeriesId) return [];
 
-      const merged = new Map<string, {ds: string; actual?:number; yhat?:number}>();
+      const merged = new Map<string, any>();
 
       results.history
         .filter((row) => row.unique_id === selectedSeriesId)
@@ -150,20 +195,41 @@
         });
 
       results.predictions
-        .filter((row) => row.unique_id === selectedSeriesId)
-        .forEach((row) => {
-          const existing = merged.get(row.ds);
-          merged.set(row.ds, { ds:row.ds, actual: existing?.actual, yhat: row.yhat });
+        .filter((r) => r.unique_id === selectedSeriesId)
+        .forEach((r) => {
+          const prev = merged.get(r.ds) ?? { ds: r.ds}
+          merged.set(r.ds, { 
+            ...prev,
+            yhat: r.yhat, 
+            y_lower: r.y_lower, 
+            y_upper: r.y_upper,
+          });
         });
 
-        return Array.from(merged.values()).sort((a, b) => {
-          const da = new Date(a.ds).getTime();
-          const db = new Date(b.ds).getTime();
-          if (Number.isNaN(da) || Number.isNaN(db)) return a.ds.localeCompare(b.ds);
-          return da - db;
-        });
+        const sortedData = Array.from(merged.values()).sort(
+          (a, b) => new Date(a.ds).getTime() - new Date(b.ds).getTime()
+        );
+
+        logger.info("REPORT", "data para grafica", { chartData: sortedData });
+
+        return sortedData;
     }, [results, selectedSeriesId]);
 
+    /**
+     * Punto de corte entre historico y pronostico
+     */
+    const forecastStartDate = useMemo(() => {
+      if (!results || !selectedSeriesId) return null;
+
+      const historyDates = results.history
+        .filter((r) => r.unique_id === selectedSeriesId)
+        .map((r) => r.ds)
+        .sort();
+
+      const lastHistotyDate = historyDates.at(-1) ?? null;
+      logger.info("REPORT", "Ultima fecha de historico", { lastHistotyDate});
+      return lastHistotyDate;
+    }, [results, selectedSeriesId]);
 
     /**
      * Manejador de errores de status
@@ -302,11 +368,11 @@
                       Pronóstico
                     </h3>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
+                      <ComposedChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
                           dataKey="ds" 
-                          tickFormatter={(value) => new Date(value).toLocaleDateString()}
+                          tickFormatter={(value) => new Date(value).toLocaleDateString("es-PE", {day: "2-digit", month: "2-digit", year: "2-digit"})}
                           label={{ value: "Fecha", position: "insideBottom", offset: -5 }}
                         />
                         <YAxis
@@ -316,13 +382,14 @@
                         <Tooltip
                           content={({ active, label, payload }) => {
                             if (!active || !payload || payload.length === 0) return null;
+                            const relevantData = payload.filter(p => p.dataKey === "actual" || p.dataKey === "yhat");
                             return (
                               <div className="rounded-md border bg-background px-3 py-2 shadow-sm">
                                 <div className="text-xs font-medium text-foreground">
                                   Fecha: {formatDate(String(label))}
                                 </div>
                                 <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-                                  {payload.map((entry) => {
+                                  {relevantData.map((entry) => {
                                     const name = entry.name === "actual" ? "Serie" : "Pronostico";
                                     return (
                                       <div key={entry.dataKey} className="flex items-center justify-between gap-3">
@@ -338,9 +405,14 @@
                             );
                           }}
                         />
+                        <Area type="linear" dataKey="y_lower" stroke="none" fill="transparent" isAnimationActive={false} />
+                        <Area type="linear" dataKey="y_upper" stroke="none" fill="#2563eb" fillOpacity={0.2} isAnimationActive={false} />
+                        { forecastStartDate && (
+                          <ReferenceLine x={forecastStartDate} stroke="#9ca3af" strokeWidth={2} strokeDasharray="10 5"/>
+                        )}
                         <Line type="linear" dataKey="actual" stroke="#0f766e" strokeWidth={2} dot={false}/>
                         <Line type="linear" dataKey="yhat" stroke="#2563eb" strokeWidth={2} dot={false} />
-                      </LineChart>
+                      </ComposedChart>
                     </ResponsiveContainer>
                   </div>
                   

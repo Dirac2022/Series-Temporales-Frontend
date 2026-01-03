@@ -69,8 +69,8 @@ export interface ForecastPrediction {
     yhat: number;               // Valor predicho
 
     // Intervalos de confianza (opcionales)
-    yhat_lower?: number;        // Limite infererior del intervalo
-    yhayt_upper?: number;       // Limite superior del intervalo
+    y_lower?: number;        // Limite infererior del intervalo
+    y_upper?: number;       // Limite superior del intervalo
     confidence_level?: number;    
 }
 
