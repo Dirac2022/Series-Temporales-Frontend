@@ -1,4 +1,4 @@
-  import { useState, useEffect, useMemo } from "react";
+  import { useState, useEffect, useMemo, useCallback } from "react";
   import { useParams, Link } from "react-router-dom"
   import { Card, CardContent, CardHeader, CardTitle, CardDescription} from "../../../components/ui/card"
   import { Button } from "../../../components/ui/button"
@@ -122,15 +122,46 @@
     const isMissingJob = !resolvedJobId;
     const isIdle = isMissingJob || (!isLoadingStatus && status === null);
 
+    const numberFormatter = useMemo(
+      () => new Intl.NumberFormat("es-PE", { maximumFractionDigits: 2 }),
+      []
+    );
+
+    const formatDate = useCallback((value: string) => {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleDateString("es-PE");
+    }, []);
+
     /**
      * Datos para el gráfico
      */
     const chartData = useMemo(() => {
       if (!results || !selectedSeriesId) return [];
-      return results.predictions
+
+      const merged = new Map<string, {ds: string; actual?:number; yhat?:number}>();
+
+      results.history
         .filter((row) => row.unique_id === selectedSeriesId)
-        .map((row) => ({ ds: row.ds, yhat: row.yhat }));
+        .forEach((row) => {
+          merged.set(row.ds, {ds: row.ds, actual: row.y});
+        });
+
+      results.predictions
+        .filter((row) => row.unique_id === selectedSeriesId)
+        .forEach((row) => {
+          const existing = merged.get(row.ds);
+          merged.set(row.ds, { ds:row.ds, actual: existing?.actual, yhat: row.yhat });
+        });
+
+        return Array.from(merged.values()).sort((a, b) => {
+          const da = new Date(a.ds).getTime();
+          const db = new Date(b.ds).getTime();
+          if (Number.isNaN(da) || Number.isNaN(db)) return a.ds.localeCompare(b.ds);
+          return da - db;
+        });
     }, [results, selectedSeriesId]);
+
 
     /**
      * Manejador de errores de status
@@ -232,7 +263,7 @@
           </Card>
 
           {/* GRÁFICO DE MÉTRICAS */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isCompleted ? "" : "opacity-40 grayscale pointer-events-none"}`}>
+          <div className={`grid grid-cols-1 gap-6 ${isCompleted ? "" : "opacity-40 grayscale pointer-events-none"}`}>
             {/* GRÄFICO DE PROYECCIÓN */}
             <Card>
               <CardHeader>
@@ -257,9 +288,9 @@
                   </div>
                 ) : null}
               </CardHeader>
-              <CardContent className="h-64 border-t">
+              <CardContent className="border-t">
                 {isCompleted && chartData.length > 0 ? (
-                  <>
+                  <div className="h-80 md:h-96">
                     <h3 className="text-center">
                       Pronóstico
                     </h3>
@@ -274,17 +305,40 @@
                         <YAxis
                           label={{ value: "Proyección", angle: -90, position: "insideLeft" }}
                         />
+                        
                         <Tooltip
-                          labelFormatter={(label) => `Fecha: ${new Date(label).toLocaleDateString()}`}
-                          formatter={(value) => [`${Number(value)?.toFixed(3) ?? ''}`, "Pronóstico"]}
+                          content={({ active, label, payload }) => {
+                            if (!active || !payload || payload.length === 0) return null;
+                            return (
+                              <div className="rounded-md border bg-background px-3 py-2 shadow-sm">
+                                <div className="text-xs font-medium text-foreground">
+                                  Fecha: {formatDate(String(label))}
+                                </div>
+                                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                                  {payload.map((entry) => {
+                                    const name = entry.name === "actual" ? "Serie" : "Pronostico";
+                                    return (
+                                      <div key={entry.dataKey} className="flex items-center justify-between gap-3">
+                                        <span>{name}</span>
+                                        <span className="font-mono text-foreground">
+                                          {numberFormatter.format(Number(entry.value))} unidades
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          }}
                         />
+                        <Line type="linear" dataKey="actual" stroke="#0f766e" strokeWidth={2} dot={false}/>
                         <Line type="linear" dataKey="yhat" stroke="#2563eb" strokeWidth={2} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
-                  </>
+                  </div>
                   
                 ) : (
-                  <div className="h-full flex items-center justify-center">
+                  <div className="h-80 md:h-96 flex items-center justify-center">
                     <p className="text-sm italic">Area reservada para grafico interactivo</p>
                   </div>
                 )}
@@ -299,17 +353,20 @@
                   Metricas de Error
                 </CardTitle>
               </CardHeader>
-              <CardContent className="h-64 flex items-center justify-center border-t">
-                {isCompleted && results ? (
-                  <div className="w-full max-w-xs space-y-3">
-                    <MetricRow label="MAE" value={results.metrics.mae} />
-                    <MetricRow label="RMSE" value={results.metrics.rmse} />
-                    <MetricRow label="MAPE" value={results.metrics.mape} />
-                    <MetricRow label="WAPE" value={results.metrics.wape} />
-                  </div>
-                ) : (
-                  <p className="text-sm italic">Area reservada para MAE, RMSE y MAPE</p>
-                )}
+              <CardContent className="h-40 flex items-center justify-center border-t">
+                <div className="w-full flex flex-wrap justify-around gap-6">  
+                  {isCompleted && results ? (
+                    <>
+                      <MetricRow label="MAE" value={results.metrics.mae} />
+                      <MetricRow label="RMSE" value={results.metrics.rmse} />
+                      <MetricRow label="MAPE" value={results.metrics.mape} />
+                      <MetricRow label="WAPE" value={results.metrics.wape} />
+                    </>
+                  ) : (
+                    <p className="text-sm italic">Area reservada para MAE, RMSE y MAPE</p>
+                  )}
+                </div>
+
               </CardContent>
             </Card>
           </div>
@@ -324,7 +381,7 @@
    */
   function MetricRow({ label, value }: { label: string; value?: number | null }) {
     return (
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center gap-2 justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
         <span className="font-mono">{value == null ? "--" : value.toFixed(4)}</span>
       </div>

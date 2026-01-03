@@ -95,9 +95,9 @@ export interface ForecastResultResponse {
     metrics: ForecastMetrics;
     predictions: ForecastPrediction[];
 
-    // Datos opcionales
-    historical?: HistoricalDataPoint[];
+    history: HistoricalDataPoint[];
 
+    // Datos opcionales
     // Esto podría ser útil
     modelInfo?: {
         modelType: string;          // Modelo usado (NBEATS, TFT, etc.)

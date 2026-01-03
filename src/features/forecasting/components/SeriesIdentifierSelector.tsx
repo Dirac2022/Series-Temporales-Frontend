@@ -92,9 +92,9 @@ export function SeriesIdentifierSelector({
                                 ))}
                             </div>
                             {/* Lado izquierdo: Estimacion de la cantidad de series */}
-                            <div className="text-xs text-muted-foreground">
+                            {/* <div className="text-xs text-muted-foreground">
                                 ~{estimatedSeriesCount.toLocaleString()} series estimadas
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 )}
