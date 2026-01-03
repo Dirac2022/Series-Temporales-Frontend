@@ -9,13 +9,13 @@ export interface BackendFileResponse {
 }
 
 /**
- * Unidades temporales soportadas para el horizonte de predicci??n
+ * Unidades temporales soportadas para el horizonte de prediccion
  */
 export type TimeUnit = 'days' | 'weeks' | 'months';
 
 
 /**
- * El horizonte define cu??nto tiempo adelante queremos predecir
+ * El horizonte define cuanto tiempo adelante queremos predecir
  */ 
 export interface ForecastHorizon {
     value: number;      // Cantidad de periodos
@@ -24,7 +24,7 @@ export interface ForecastHorizon {
 
 
 /**
- * Configuraci??n completa del mapping de columnas del dataset
+ * Configuracion completa del mapping de columnas del dataset
  */
 export interface ColumnMapping {
     timestamp: string;              // Columna de fecha/tiempo (obligatorio)
@@ -33,27 +33,27 @@ export interface ColumnMapping {
 }
 
 /**
- * Configuraci??n completa para enviar al backend
+ * Configuracion completa para enviar al backend
  */
 export interface ForecastConfiguration {
     fileId: string;                     // ID del archivo en el backend
     mapping: ColumnMapping;            // Mapeo de columnas
-    horizon: ForecastHorizon;     // Horizonte de predicci??n
+    horizon: ForecastHorizon;     // Horizonte de prediccion
 }
 
 /**
  * Validaciones predefinidas para el horizonte
- * Como gu??a para el usuario
+ * Como guia para el usuario
  */
 export interface HorizonValidation {
     maxRecommended: number;             // Maximo recomendado de periodos (porcentaje del historico)
-    isValid: boolean;                   // ??El valor actual es v??lido?
+    isValid: boolean;                   // El valor actual es valido?
     warningMessage?: string;            // Mensaje si excede lo recomendado
 }
 
 
 // ===========================================================
-// P??GINA DE RESULTADOS ResultsPage.tsx
+// PAGINA DE RESULTADOS ResultsPage.tsx
 // ===========================================================
 
 type JobStatus = "queued" | "running" | "completed" | "failed"

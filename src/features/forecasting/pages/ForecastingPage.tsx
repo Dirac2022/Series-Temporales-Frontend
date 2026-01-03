@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
@@ -12,29 +13,38 @@ import { SeriesIdentifierSelector } from "../components/SeriesIdentifierSelector
 import type { BackendFileResponse, ForecastHorizon, TimeUnit, ForecastConfiguration } from "../types/api.types"
 import { API, DAY_EQUIVALENCE, STORAGE_KEYS, UNIT_LABELS, VALIDATION } from "../../../config/constants"
 import { logger } from "../../../services/logger"
+import { getErrorInfo, handleError } from "../../../lib/errors"
+import { useForecast } from "../hooks/useForecast"
 
 export default function ForecastingPage() {
+
+  // Hook con upload + startForecast encapsulado
+  const { uploadAndStartForecast, isLoading, error } = useForecast();
 
   const navigate = useNavigate();
 
   // Estado para los metadatos devueltos por el servidor
-  const [metadata, setMetadata] = React.useState<BackendFileResponse | null>(null);
+  const [metadata, setMetadata] = useState<BackendFileResponse | null>(null);
+
+  // useForecast necesita el archivo para re-subirlo
+  // TODO: Porque tendria que resubirlo?
+  const [ currentFile, setCurrentFile] = useState<File | null>(null);
 
   // Nombre del archvivo original
-  const [fileName, setFileName] = React.useState<string>("");
+  const [fileName, setFileName] = useState<string>("");
 
   // Estado para el mapeo de columnas
-  const [mapping, setMapping] = React.useState({
+  const [mapping, setMapping] = useState({
     timestamp: "", // Columna de tiempo
     target: "", // Columna objetivo
   });
 
   // Identificadores de series
-  const [seriesIdentifiers, setSeriesIdentifiers] = React.useState<string[]>([]);
+  const [seriesIdentifiers, setSeriesIdentifiers] = useState<string[]>([]);
 
   // Horizonte de prediccion
   // Valores por defecto: Prediccion de 4 semanas
-  const [horizon, setHorizon] = React.useState<ForecastHorizon>({
+  const [horizon, setHorizon] = useState<ForecastHorizon>({
     value: 4,
     unit: 'weeks'
   });
@@ -48,7 +58,8 @@ export default function ForecastingPage() {
   const excludedColumns = [mapping.timestamp, mapping.target].filter(Boolean)
 
 
-  const estimatedSeriesCount = React.useMemo(() => {
+
+  const estimatedSeriesCount = useMemo(() => {
     if (!metadata) return 1;
     if (seriesIdentifiers.length === 0) return 1;
     return Math.min(metadata.rowCount, Math.pow(10, seriesIdentifiers.length));
@@ -83,47 +94,99 @@ export default function ForecastingPage() {
   // const isHorizonValid = horizon.value <= maxRecommendedHorizon;
 
   // Handler cuando se carga exitosamente un archivo
-  const handleUploadSuccess = (data: BackendFileResponse, name: string) => {
+  // Recibe tambien el File y lo guarda en estado
+  const handleUploadSuccess = (data: BackendFileResponse, name: string, file: File) => {
+    logger.info("FORECAST", "Archivo cargado exitosamente en FileUpload", {
+      fileName: name,
+      fileId: data.fileId,
+      rowCount: data.rowCount,
+      columns: data.columns,
+    });
+
     setMetadata(data);
     setFileName(name);
+    setCurrentFile(file);
   };
 
   // Condiciones para habilitar el boton de prediccion
   const canGenerateForecast = metadata !== null &&
+    currentFile !== null &&
     mapping.timestamp !== "" &&
     mapping.target !== "" &&
-    seriesIdentifiers.length > 0;
+    seriesIdentifiers.length > 0 &&
+    !isLoading;
     // && isHorizonValid;
 
-  // Handler para generar prediccion
+  /**
+   * Handler para generar prediccion
+   */
   const handleGenerateForecast = async () => {
-    if (!canGenerateForecast || !metadata) return;
-
-    // Construccion del Payload segon el contrato definido en api.types.ts
-    const config: ForecastConfiguration = {
-      fileId: metadata.fileId,
-      mapping: {
-        timestamp: mapping.timestamp,
-        target: mapping.target,
-        seriesIdentifiers: seriesIdentifiers
-      },
-      horizon: horizon
-    };
+    if (!canGenerateForecast || !metadata || !currentFile) return;
 
     try {
-      const response = await axios.post(`${API.BASE_URL}/forecast`, config)
+      logger.info("FORECAST", "Iniciando genracion de forecast", {
+        fileId: metadata.fileId,
+        mapping,
+        horizon,
+        seriesIdentifiers: seriesIdentifiers,
+      });
 
-      // Navegacion a resultados
-      // Si el backend aun no retorna un ID, usamos uno termporal para el placeholder
-      const jobId = response.data.jobId || "new-forecast-job";
+      // Hook upload + startForecast
+      const jobId = await uploadAndStartForecast(currentFile, {
+        mapping: {
+          timestamp: mapping.timestamp,
+          target: mapping.target,
+          seriesIdentifiers: seriesIdentifiers,
+        },
+        horizon: horizon,
+      });
+
       window.localStorage.setItem(STORAGE_KEYS.LAST_FORECAST_JOB, jobId);
+
+      logger.info("FORECAST", "Navegando a la pagina de resultados", { jobId });
       navigate(`/results/${jobId}`);
+
     } catch (error) {
-      console.error("Error al iniciar la prediccion:", error);
-      alert("Error al conectar con el motor de ML. Verifica la consola");
-    }
+      const appError = handleError(error, "FORECAST", "Generar prediccion");
+      const info = getErrorInfo(appError);
+
+      // TODO: reemplazar alert con un toast/notificacion component
+      alert(`${info.title}: ${info.message}`);
+    };
+
+    // Construccion del Payload segon el contrato definido en api.types.ts
+    // const config: ForecastConfiguration = {
+    //   fileId: metadata.fileId,
+    //   mapping: {
+    //     timestamp: mapping.timestamp,
+    //     target: mapping.target,
+    //     seriesIdentifiers: seriesIdentifiers
+    //   },
+    //   horizon: horizon
+    // };
+
+    // try {
+    //   const response = await axios.post(`${API.BASE_URL}/forecast`, config)
+
+    //   // Navegacion a resultados
+    //   // Si el backend aun no retorna un ID, usamos uno termporal para el placeholder
+    //   const jobId = response.data.jobId || "new-forecast-job";
+    //   window.localStorage.setItem(STORAGE_KEYS.LAST_FORECAST_JOB, jobId);
+    //   navigate(`/results/${jobId}`);
+    // } catch (error) {
+    //   console.error("Error al iniciar la prediccion:", error);
+    //   alert("Error al conectar con el motor de ML. Verifica la consola");
+    // }
   };
 
+
+  
+  useEffect(() => {
+    if (error) {
+      const info = getErrorInfo(error);
+      alert(`${info.title}: ${info.message}`);
+    }
+  }, [error])
 
   return (
     <div className="space-y-6">
@@ -146,11 +209,12 @@ export default function ForecastingPage() {
               <CardDescription>Sube un archivo con tu historico</CardDescription>
             </CardHeader>
             <CardContent>
-              <FileUpload onUploadSuccess={(data, name) => {
+              {/* <FileUpload onUploadSuccess={(data, name) => {
                 setMetadata(data);
                 setFileName(name);
               }}
-              />
+              /> */}
+              <FileUpload onUploadSuccess={handleUploadSuccess}/>
             </CardContent>
           </Card>
 
@@ -218,7 +282,13 @@ export default function ForecastingPage() {
               availableColumns={columns}
               excludedColumns={excludedColumns}
               selectedColumns={seriesIdentifiers}
-              onSelectionChange={setSeriesIdentifiers}
+              // onSelectionChange={setSeriesIdentifiers}
+              onSelectionChange={(selected) => {
+                setSeriesIdentifiers(selected);
+                logger.debug("FORECAST", "Identificadores actualizados", {
+                  count: selected.length,
+                });
+              }}
             />
           )}
 
@@ -246,7 +316,14 @@ export default function ForecastingPage() {
                       min="1"
                       // max={maxRecommendedHorizon}
                       value={horizon.value}
-                      onChange={(e) => setHorizon(prev => ({ ...prev, value: Number(e.target.value) }))}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        setHorizon(prev => ({ ...prev, value }));
+                        logger.debug("FORECAST", "Horizonte actualizado", {
+                          value,
+                          unit: horizon.unit
+                        });
+                      }}
                     />
                   </div>
                   {/* UNIDAD TEMPORAL */}
@@ -254,13 +331,16 @@ export default function ForecastingPage() {
                     <Label>Unidad</Label>
                     <Select
                       value={horizon.unit}
-                      onValueChange={(v: TimeUnit) => setHorizon(prev => ({ ...prev, unit: v }))}
+                      onValueChange={(v: TimeUnit) => {
+                        setHorizon(prev => ({ ...prev, unit: v }));
+                        logger.debug("FORECAST", "Unidad actualizada", { unit: v });
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* OPCIONES HARDCODEADAS, YA QUE SON SOLO 3 OPCIONES QUE PROBABLEMENTE NO CAMBIARON */}
+                        {/* OPCIONES HARDCODEADAS */}
                         <SelectItem value="days">{UNIT_LABELS.days}</SelectItem>
                         <SelectItem value="weeks">{UNIT_LABELS.weeks}</SelectItem>
                         <SelectItem value="months">{UNIT_LABELS.months}</SelectItem>
@@ -315,17 +395,18 @@ export default function ForecastingPage() {
                 <StatusItem label="Identificadores definidos" isComplete={seriesIdentifiers.length > 0} />
                 {/* <StatusItem label="Horizonte configurado" isComplete={isHorizonValid} /> */}
               </ul>
-              {/* BOTON PRINCIPAL */}
+              {/* BOTON PRINCIPAL con feedback visual de logging*/}
               <Button
                 className="w-full mt-4"
                 disabled={!canGenerateForecast}
                 onClick={handleGenerateForecast}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
-                Generar Prediccion
+                { isLoading ? "Procesando..." : "Generar Prediccion"}
+                {/* Generar Prediccion */}
               </Button>
               {/* MENSAJE DE AYUDA (boton deshabilitado) */}
-              {!canGenerateForecast && (
+              {!canGenerateForecast && !isLoading && (
                 <p className="text-xs text-muted-foreground text-center mt-2">
                   Completa todos los pasos para continuar
                 </p>

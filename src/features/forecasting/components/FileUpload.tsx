@@ -8,7 +8,7 @@ import { cn } from "../../../lib/utils"
 import type { BackendFileResponse } from "../types/api.types"
 
 interface FileUploadProps {
-    onUploadSuccess: (data: BackendFileResponse, originalName: string) => void;
+    onUploadSuccess: (data: BackendFileResponse, originalName: string, file: File) => void;
 }
 
 export function FileUpload({ onUploadSuccess }: FileUploadProps) {
@@ -53,7 +53,8 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
                 }
             );
 
-            onUploadSuccess(response.data, file.name);
+            // onUploadSuccess(response.data, file.name);
+            onUploadSuccess(response.data, file.name, file);
         } catch (error) {
             console.error("Error en el transporte de datos. Revisa la conexión con el backend:", error);
             alert("No se pudo subir el archivo")
