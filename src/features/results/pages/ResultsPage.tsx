@@ -1,5 +1,5 @@
   import { useState, useEffect, useMemo, useCallback } from "react";
-  import { useParams, Link } from "react-router-dom"
+  import { useParams, Link, useNavigate } from "react-router-dom"
   import { Card, CardContent, CardHeader, CardTitle, CardDescription} from "../../../components/ui/card"
   import { Button } from "../../../components/ui/button"
   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
@@ -13,6 +13,8 @@
   import type { ForecastResultResponse } from "../../../services/api"
 
   export default function ResultsPage() {
+
+    const navigate = useNavigate();
     const { jobId } = useParams<{ jobId: string }>();
 
     // Estado para el jobId resuelto (de URL o localStorage)
@@ -254,7 +256,12 @@
                 <Button variant="outline" asChild>
                   <Link to="/forecast">Volver</Link>
                 </Button>
-                <Button disabled={!isCompleted || isIdle || isLoadingResults}>
+                <Button
+                  disabled={!isCompleted || isIdle || isLoadingResults}
+                  onClick={() => navigate(`/results/${resolvedJobId}/report`, {
+                    state: { data: results}  
+                  })}
+                >
                   <FileSearch className="mr-2 h-4 w-4" />
                   Ver Reporte Completo
                 </Button>

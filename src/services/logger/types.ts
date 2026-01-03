@@ -12,6 +12,7 @@ export type LogModule =
     | "VALIDATION"      // Validaciones de datos
     | "FORECAST"        // Logica de forecasting (Forecasting)
     | "RESULTS"         // Logica de resultados (Results)
+    | "REPORT"          // Reporte
     | "APP"             // Eventos generales de la aplicacion
 
 /**

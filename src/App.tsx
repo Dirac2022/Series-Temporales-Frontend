@@ -4,6 +4,7 @@ import { Header } from  "./components/layout/Header"
 import { Sidebar } from "./components/layout/Sidebar"
 import TechnicalPage from "./features/forecasting/pages/ForecastingPage"
 import ResultsPage from "./features/results/pages/ResultsPage"
+import ReportPage from "./features/results/pages/ReportPage"
 import { logger } from "./services/logger"
 import { useEffect } from "react"
 
@@ -34,6 +35,7 @@ function App() {
                     <Route path="/forecast" element={<TechnicalPage />}/>
                     <Route path="/results" element={<ResultsPage />}/>
                     <Route path="/results/:jobId" element={<ResultsPage />}/>
+                    <Route path="/results/:jobId/report" element={<ReportPage />}/>
 
                     {/* Ruta 404 */}
                     <Route path="*" element={

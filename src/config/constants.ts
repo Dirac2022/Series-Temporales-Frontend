@@ -57,3 +57,10 @@ export const VALIDATION = {
 export const API = {
     BASE_URL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1",
 } as const;
+
+/**
+ * Constantes de ReportPage
+ */
+export const REPORT = {
+    MAX_ROWS_DISPLAYED: 20,
+}
