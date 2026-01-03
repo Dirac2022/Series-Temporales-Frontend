@@ -25,7 +25,7 @@ import { forecastService } from "../../../services/api";
 import { logger } from "../../../services/logger";
 import { handleError, AppError } from "../../../lib/errors";
 import { POLLING } from "../../../config/constants";
-import type { ForecastStatusResponse } from "../../forecasting/types/api.types"; 
+import type { ForecastStatusResponse } from "../../../services/api";
 
 
 /**

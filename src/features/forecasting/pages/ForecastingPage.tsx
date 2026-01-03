@@ -1,7 +1,5 @@
-import * as React from "react"
 import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import axios from "axios"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { FileUpload } from "../components/FileUpload"
 import { Label } from "../../../components/ui/label"
@@ -10,8 +8,8 @@ import { Input } from "../../../components/ui/input"
 import { Button } from "../../../components/ui/button"
 import { CheckCircle2, AlertCircle, TrendingUp, Calendar } from "lucide-react"
 import { SeriesIdentifierSelector } from "../components/SeriesIdentifierSelector"
-import type { BackendFileResponse, ForecastHorizon, TimeUnit, ForecastConfiguration } from "../types/api.types"
-import { API, DAY_EQUIVALENCE, STORAGE_KEYS, UNIT_LABELS, VALIDATION } from "../../../config/constants"
+import type { BackendFileResponse, ForecastHorizon, TimeUnit } from "../../../services/api/types"
+import { STORAGE_KEYS, UNIT_LABELS } from "../../../config/constants"
 import { logger } from "../../../services/logger"
 import { getErrorInfo, handleError } from "../../../lib/errors"
 import { useForecast } from "../hooks/useForecast"
@@ -153,30 +151,6 @@ export default function ForecastingPage() {
       // TODO: reemplazar alert con un toast/notificacion component
       alert(`${info.title}: ${info.message}`);
     };
-
-    // Construccion del Payload segon el contrato definido en api.types.ts
-    // const config: ForecastConfiguration = {
-    //   fileId: metadata.fileId,
-    //   mapping: {
-    //     timestamp: mapping.timestamp,
-    //     target: mapping.target,
-    //     seriesIdentifiers: seriesIdentifiers
-    //   },
-    //   horizon: horizon
-    // };
-
-    // try {
-    //   const response = await axios.post(`${API.BASE_URL}/forecast`, config)
-
-    //   // Navegacion a resultados
-    //   // Si el backend aun no retorna un ID, usamos uno termporal para el placeholder
-    //   const jobId = response.data.jobId || "new-forecast-job";
-    //   window.localStorage.setItem(STORAGE_KEYS.LAST_FORECAST_JOB, jobId);
-    //   navigate(`/results/${jobId}`);
-    // } catch (error) {
-    //   console.error("Error al iniciar la prediccion:", error);
-    //   alert("Error al conectar con el motor de ML. Verifica la consola");
-    // }
   };
 
 
@@ -209,11 +183,6 @@ export default function ForecastingPage() {
               <CardDescription>Sube un archivo con tu historico</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* <FileUpload onUploadSuccess={(data, name) => {
-                setMetadata(data);
-                setFileName(name);
-              }}
-              /> */}
               <FileUpload onUploadSuccess={handleUploadSuccess}/>
             </CardContent>
           </Card>

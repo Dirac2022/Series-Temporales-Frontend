@@ -2,10 +2,11 @@ import * as React from "react"
 import { useDropzone } from "react-dropzone"
 import { Upload, Loader2 } from "lucide-react" 
 // TODO: // FileText from "lucide-react" como vista cuando se carga un archivo
-import axios from "axios"
 import { cn } from "../../../lib/utils"
-// import { Button } from "../../../components/ui/button"
-import type { BackendFileResponse } from "../types/api.types"
+import type { BackendFileResponse } from "../../../services/api/types"
+import { logger } from "../../../services/logger"
+import { forecastService } from "../../../services/api"
+import { getErrorInfo, handleError } from "../../../lib/errors"
 
 interface FileUploadProps {
     onUploadSuccess: (data: BackendFileResponse, originalName: string, file: File) => void;
@@ -31,35 +32,56 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
     });
 
 
+    /**
+     * Upload con progreso real
+     * 
+     * 1. forecastService.uploadFile() acepta callback de progreso
+     * 2. Axios llama al callback multiples veces durante el upload
+     * 3. Actualizamos el estado con el progreso real
+     * 4. La barra refleja el progreso exacto del upload
+     */
     const handleUpload = async (file: File) => {
-        const formData = new FormData();
-        formData.append('file', file); // 'file' debe coincidir con el nombre esperado por el backend
-
         setIsUploading(true);
         setProgress(0);
 
         try{
-            const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
-            const response = await axios.post<BackendFileResponse>(
-                `${baseUrl}/upload`,
-                formData,
-                {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                    onUploadProgress: (progressEvent) => {
-                        const total = progressEvent.total || file.size;
-                        const current = Math.round((progressEvent.loaded * 100) / total);
-                        setProgress(current);
-                    },
-                }
-            );
 
-            // onUploadSuccess(response.data, file.name);
-            onUploadSuccess(response.data, file.name, file);
+            logger.info("UI", "Iniciando upload de archivo desde FileUpload", {
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type
+            });
+
+            const response = await forecastService.uploadFile(file, (progressPercent) => {
+                setProgress(progressPercent);
+
+                // Log cada 25 % para debugging
+                if (progressPercent % 25 === 0) {
+                    logger.debug("UI", `Upload progress: ${progressPercent}%`, { fileName: file.name,});
+                }
+            })
+            
+            logger.info("UI", "Upload completado exitosamente desde FileUpload", {
+                fileId: response.fileId,
+                rowCount: response.rowCount,
+            });
+
+            // Llama a callback con File incluido
+            onUploadSuccess(response, file.name, file);
+
         } catch (error) {
-            console.error("Error en el transporte de datos. Revisa la conexión con el backend:", error);
-            alert("No se pudo subir el archivo")
+            const appError = handleError(error, "UI", "Upload file from component");
+            const info = getErrorInfo(appError)
+            logger.error("UI", "Error en upload desde FileUpload", {
+                fileName: file.name,
+                errorMessage: info.message,
+            });
+            
+            // TODO: Reemplazar con toast/notificacion
+            alert(`${info.title}: ${info.message}`);
         } finally {
             setIsUploading(false);
+            setProgress(0);
         }
     };
 

@@ -10,7 +10,7 @@ import axios from "axios";
 import { logger } from "../logger";
 import { handleError } from "../../lib/errors";
 import { API } from "../../config/constants";
-import type { ForecastConfiguration } from "../../features/forecasting/types/api.types";
+import type { ForecastConfiguration } from "./types";
 import type { 
     UploadResponse,
     ForecastStartResponse,
@@ -21,12 +21,20 @@ import type {
 
 
 export const forecastService = {
+
     /**
      * Sube un archivo al servidor para procesamiento
      * 
      * ENDPOINT POST /upload
+     * 
+     * @params file - Archivo a subir
+     * @params onProgress - Callback opcional para reportar progreso (0 - 100)
+     * @returns Metadatos del archivo procesado
      */
-    uploadFile: async (file: File): Promise<UploadResponse> => {
+    uploadFile: async (
+        file: File, 
+        onProgress?: (progress: number) => void
+    ): Promise<UploadResponse> => {
         try {
             logger.info("API", "Subiendo archivo", {
                 fileName: file.name,
@@ -43,6 +51,13 @@ export const forecastService = {
                 {
                     headers: {
                         "Content-Type": "multipart/form-data",
+                    },
+
+                    onUploadProgress: (progressEvent) => {
+                        if (onProgress && progressEvent.total) {
+                            const percentedCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            onProgress(percentedCompleted);
+                        }
                     },
                 }
             );
