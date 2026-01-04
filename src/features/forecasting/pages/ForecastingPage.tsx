@@ -14,38 +14,64 @@ import { logger } from "../../../services/logger"
 import { getErrorInfo, handleError } from "../../../lib/errors"
 import { useForecast } from "../hooks/useForecast"
 
+
+/**
+ * Helper para leer y parsear JSON de localStorage de forma segura
+ * @param key - Clave de localStorage
+ * @param fallback - Valor por defecto si no existe o hay error
+ */
+function getStoredValue<T>(key: string, fallback: T): T {
+  try {
+    const stored = window.localStorage.getItem(key);
+    if (stored === null) return fallback;
+    return JSON.parse(stored) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function ForecastingPage() {
 
   // Hook con upload + startForecast encapsulado
-  const { uploadAndStartForecast, isLoading, error } = useForecast();
+  //const { uploadAndStartForecast, isLoading, error } = useForecast();
+  const { startForecastWithFileId, isLoading, error } = useForecast();
 
   const navigate = useNavigate();
 
   // Estado para los metadatos devueltos por el servidor
-  const [metadata, setMetadata] = useState<BackendFileResponse | null>(null);
+  const [metadata, setMetadata] = useState<BackendFileResponse | null>(
+    () => getStoredValue<BackendFileResponse | null>(STORAGE_KEYS.FORECAST_METADATA, null)
+  );
 
   // useForecast necesita el archivo para re-subirlo
-  // TODO: Porque tendria que resubirlo?
-  const [ currentFile, setCurrentFile] = useState<File | null>(null);
+  //const [ currentFile, setCurrentFile] = useState<File | null>(null);
 
   // Nombre del archvivo original
-  const [fileName, setFileName] = useState<string>("");
+  const [fileName, setFileName] = useState<string>(
+    () => getStoredValue<string>(STORAGE_KEYS.FORECAST_FILENAME, "")
+  );
 
   // Estado para el mapeo de columnas
-  const [mapping, setMapping] = useState({
-    timestamp: "", // Columna de tiempo
-    target: "", // Columna objetivo
-  });
+  const [mapping, setMapping] = useState(
+    () => getStoredValue(STORAGE_KEYS.FORECAST_MAPPING, {
+      timestamp: "", // Columna de tiempo
+      target: "", // Columna objetivo
+      }
+  ));
 
   // Identificadores de series
-  const [seriesIdentifiers, setSeriesIdentifiers] = useState<string[]>([]);
+  const [seriesIdentifiers, setSeriesIdentifiers] = useState<string[]>(
+    () => getStoredValue<string[]>(STORAGE_KEYS.FORECAST_SERIES_IDS, [])
+  );
 
   // Horizonte de prediccion
   // Valores por defecto: Prediccion de 4 semanas
-  const [horizon, setHorizon] = useState<ForecastHorizon>({
-    value: 4,
-    unit: 'weeks'
-  });
+  const [horizon, setHorizon] = useState<ForecastHorizon>(
+    () => getStoredValue<ForecastHorizon>(STORAGE_KEYS.FORECAST_HORIZON, {
+      value: 4,
+      unit: 'weeks'
+    }
+  ));
 
   // Array de columnas disponibles
   const columns = metadata?.columns || [];
@@ -56,6 +82,40 @@ export default function ForecastingPage() {
   const excludedColumns = [mapping.timestamp, mapping.target].filter(Boolean)
 
 
+  /**
+   * Persistir configuración en localStorage
+   * Se ejecuta cada vez que cambia alguno de los estados
+   */
+  useEffect(() => {
+    // Solo persistir si hay metadata (archivo cargado)
+    if (metadata) {
+      window.localStorage.setItem(STORAGE_KEYS.FORECAST_METADATA, JSON.stringify(metadata));
+    }
+  }, [metadata]);
+
+  useEffect(() => {
+    if (fileName) {
+      window.localStorage.setItem(STORAGE_KEYS.FORECAST_FILENAME, JSON.stringify(fileName));
+    }
+  }, [fileName]);
+
+    useEffect(() => {
+    if (fileName) {
+      window.localStorage.setItem(STORAGE_KEYS.FORECAST_MAPPING, JSON.stringify(mapping));
+    }
+  }, [mapping]);
+
+    useEffect(() => {
+    if (fileName) {
+      window.localStorage.setItem(STORAGE_KEYS.FORECAST_SERIES_IDS, JSON.stringify(seriesIdentifiers));
+    }
+  }, [seriesIdentifiers]);
+
+  useEffect(() => {
+    if (fileName) {
+      window.localStorage.setItem(STORAGE_KEYS.FORECAST_HORIZON, JSON.stringify(horizon));
+    }
+  }, [horizon]);
 
   const estimatedSeriesCount = useMemo(() => {
     if (!metadata) return 1;
@@ -63,7 +123,7 @@ export default function ForecastingPage() {
     return Math.min(metadata.rowCount, Math.pow(10, seriesIdentifiers.length));
   }, [metadata, seriesIdentifiers.length]);
 
-  // TODO: Por mejorar
+  // TODO: Recomendacion de horizonte maximo
   // Flexible por si el horizonte es diario | semanal | mensual.
   // Calcula el maximo recomendado usando el historico promedio por serie.
   // const maxRecommendedHorizon = React.useMemo(() => {
@@ -101,14 +161,20 @@ export default function ForecastingPage() {
       columns: data.columns,
     });
 
+    // Actualizar metadata y nombre
     setMetadata(data);
     setFileName(name);
-    setCurrentFile(file);
+
+    // Limpiar configuracion anterior
+    setMapping({ timestamp: "", target: ""});
+    setSeriesIdentifiers([]);
+    setHorizon({ value: 4, unit: "weeks" });
+
+    logger.debug("FORECAST", "Configuracion reseteada por nuevo archivo");
   };
 
   // Condiciones para habilitar el boton de prediccion
   const canGenerateForecast = metadata !== null &&
-    currentFile !== null &&
     mapping.timestamp !== "" &&
     mapping.target !== "" &&
     seriesIdentifiers.length > 0 &&
@@ -119,7 +185,7 @@ export default function ForecastingPage() {
    * Handler para generar prediccion
    */
   const handleGenerateForecast = async () => {
-    if (!canGenerateForecast || !metadata || !currentFile) return;
+    if (!canGenerateForecast || !metadata) return;
 
     try {
       logger.info("FORECAST", "Iniciando genracion de forecast", {
@@ -130,7 +196,7 @@ export default function ForecastingPage() {
       });
 
       // Hook upload + startForecast
-      const jobId = await uploadAndStartForecast(currentFile, {
+      const jobId = await startForecastWithFileId(metadata.fileId, {
         mapping: {
           timestamp: mapping.timestamp,
           target: mapping.target,
@@ -148,7 +214,7 @@ export default function ForecastingPage() {
       const appError = handleError(error, "FORECAST", "Generar prediccion");
       const info = getErrorInfo(appError);
 
-      // TODO: reemplazar alert con un toast/notificacion component
+      // TODO: Reemplazar con toast/notificacion
       alert(`${info.title}: ${info.message}`);
     };
   };

@@ -11,12 +11,16 @@
  * 3. Inicia forecast con configuración → startForecast()
  * 4. Obtiene jobId
  * 5. Retorna jobId para navegación
+ * 
+ * Si ya tienes fileId (archivo ya subido), usa startForecastWithFileId()
+ * Si necesitas subir + iniciar, usa uploadAndStartForecast()
  */
 import { useState } from "react"
 import { forecastService } from "../../../services/api"
 import { logger } from "../../../services/logger"
 import { handleError, AppError } from "../../../lib/errors"
-import type { ForecastConfiguration } from "../types/api.types"
+//import type { ForecastConfiguration } from "../types/api.types"
+import type { ForecastConfiguration } from "../../../services/api/types"
 import type { UploadResponse } from "../../../services/api"
 
 
@@ -25,8 +29,24 @@ import type { UploadResponse } from "../../../services/api"
  */
 interface UseForecastReturn {
 
+
     /**
-     * Función para subir archivo e iniciar forecast
+     * Iniciar forecast con fileId existente (sin Re-upload)
+     * - El archivo ya fue subido en FileUpload
+     * - Ya se tiene un fileId valido
+     * 
+     * @param fileId - ID del archivo ya subido
+     * @param config - Configuracion del forecast (mapping + horizon)
+     * @returns jobId del forecast iniciado
+     */
+    startForecastWithFileId: (
+        fileId: string,
+        config: Omit<ForecastConfiguration, 'fileId'>
+    ) => Promise<string>;
+
+
+    /**
+     * Función para subir archivo e iniciar forecast 
      * 
      * @param file - Archivo a subir
      * @param config - Configuracion del forecast (sin fileId, se agrega automaticamente)
@@ -66,6 +86,46 @@ export function useForecast(): UseForecastReturn {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<AppError | null>(null);
     const [uploadedFileMetadata, setUploadedFileMetadata] = useState<UploadResponse | null>(null);
+
+    /**
+     * Iniciar forecast sin re-subir archivo
+     */
+    const startForecastWithFileId = async (
+        fileId: string,
+        config: Omit<ForecastConfiguration, 'fileId'>
+    ): Promise<string> => {
+        setError(null);
+        setIsLoading(true);
+
+        try {
+            logger.info("FORECAST", "Iniciando forecast con fileId existente", {
+                fileId,
+                horizon: config.horizon,
+                seriesIdentifiers: config.mapping.seriesIdentifiers,
+            });
+
+            // Construir configuracion completa
+            const forecastConfig: ForecastConfiguration = {
+                fileId: fileId,
+                mapping: config.mapping,
+                horizon: config.horizon
+            };
+
+            // Llama directamente a startForecast (Sin upload)
+            const forecastResponse = await forecastService.startForecast(forecastConfig);
+            logger.info("FORECAST", "Forecast iniciado exitosamente", { jobId: forecastResponse.jobId});
+            return forecastResponse.jobId;
+
+        } catch (error) {
+            const appError = handleError(error, "FORECAST", "Start forecast with fileId");
+            setError(appError);
+            throw appError;
+        
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
 
     /**
      * Upload + Start forecast
@@ -145,6 +205,7 @@ export function useForecast(): UseForecastReturn {
     };
 
     return {
+        startForecastWithFileId,
         uploadAndStartForecast,
         isLoading,
         error,

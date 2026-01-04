@@ -1,12 +1,13 @@
 import * as React from "react"
 import { useDropzone } from "react-dropzone"
 import { Upload, Loader2 } from "lucide-react" 
-// TODO: // FileText from "lucide-react" como vista cuando se carga un archivo
 import { cn } from "../../../lib/utils"
 import type { BackendFileResponse } from "../../../services/api/types"
 import { logger } from "../../../services/logger"
 import { forecastService } from "../../../services/api"
 import { getErrorInfo, handleError } from "../../../lib/errors"
+
+// TODO: Cambiar vista cuando hay un archivo cargado
 
 interface FileUploadProps {
     onUploadSuccess: (data: BackendFileResponse, originalName: string, file: File) => void;

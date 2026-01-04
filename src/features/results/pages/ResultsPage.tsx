@@ -140,7 +140,7 @@
           const info = getErrorInfo(appError);
 
           // Mostrar error al usuario
-          // TODO: Esto se puede mejorar (toast/notification component)
+          // TODO: Reemplazar con toast/notificacion
           alert(`${info.title}: ${info.message}`);
 
           if (isMounted) {
@@ -244,7 +244,7 @@
           userMessage: info.message,
         });
 
-        // TODO: Se puede mejorar
+        // TODO: Reemplazar con toast/notificacion
         alert(`${info.title}: ${info.message}`);
       }
     }, [statusError]);

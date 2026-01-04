@@ -5,11 +5,15 @@
 
 /**
  * Claves de localStorage
- * Usadas en ResultsPage, Logger
  */
 export const STORAGE_KEYS = {
     LAST_FORECAST_JOB: "lastForecastJobId",
     THEME: "forecast-ui-theme",
+    FORECAST_METADATA: "forecast_metadata",
+    FORECAST_FILENAME: "forecast_filename",
+    FORECAST_MAPPING: "forecast_mapping",
+    FORECAST_SERIES_IDS: "forecast_series_identifiers",
+    FORECAST_HORIZON: "forecast_horizon"
 } as const;
 
 
