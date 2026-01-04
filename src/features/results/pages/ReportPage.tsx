@@ -29,10 +29,10 @@ const formatDate = (isoString: string): string => {
  */
 const exportToCSV = (data: ForecastPrediction[], filename: string) => {
     // Definimos los encabezados del archivo CSV
-    const headers = "fecha, prediccion";
+    const headers = "unique_id, fecha, prediccion";
 
     // Convertimos cada objeto de prediccion en una fila de texto
-    const rows = data.map(p => `${formatDate(p.ds)},${p.yhat}}`).join("\n");
+    const rows = data.map(p => `${p.unique_id},${formatDate(p.ds)},${p.yhat}}`).join("\n");
 
     const csvContent = `${headers}\n${rows}`;
 
@@ -130,6 +130,7 @@ export default function ReportPage() {
                         <table className="w-full text-sm">
                             <thead className="bg-muted/50 border-b">
                             <tr>
+                                <th className="px-4 py-3 text-left font-medium">unique_id</th>
                                 <th className="px-4 py-3 text-left font-medium">fecha</th>
                                 <th className="px-4 py-3 text-right font-medium">prediccion</th>
                             </tr>
@@ -137,6 +138,7 @@ export default function ReportPage() {
                             <tbody className="divide-y">
                                 {displayData.map((row, index) => (
                                     <tr key={index} className="hover:bg-muted/50 transition-colors">
+                                        <td className="px-4 py-3 font-mono">{row.unique_id}</td>
                                         <td className="px-4 py-3 font-mono">{formatDate(row.ds)}</td>
                                         <td className="px-4 py-3  text-right font-mono font-bold text-primary">
                                             {row.yhat.toFixed(3)}

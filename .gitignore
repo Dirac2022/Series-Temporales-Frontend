@@ -37,3 +37,9 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+
+# Docs
+API_SERVICES.md
+ARCHITECTURE.md
+DEVELOPMENT_GUIDE.md
