@@ -14,5 +14,7 @@ export type {
     ForecastResultResponse,
     ForecastJobStatus,
     ForecastMetrics,
-    ForecastPrediction
+    ForecastPrediction,
+    ForecastHorizon,
+    TimeUnit,
 } from "./types"

@@ -11,50 +11,7 @@
   import { logger } from "../../../services/logger"
   import { useForecastStatus } from "../hooks/useForecastStatus"
   import type { ForecastResultResponse } from "../../../services/api"
-
-  /**
-   * Esta es la forma de algunas interfaces de services/api
-   * 
-    * Una predicción individual
-   export interface ForecastPrediction {
-       unique_id: string;          // ID de la serie temporal
-       ds: string;                 // Fecha (date string)
-       yhat: number;               // Valor predicho
-   
-       // Intervalos de confianza (opcionales)
-       y_lower?: number;        // Limite infererior del intervalo
-       y_upper?: number;       // Limite superior del intervalo
-       confidence_level?: number;    
-   }
-   
-
-    * Punto de datos históricos
-   export interface HistoricalDataPoint {
-       unique_id: string;
-       ds: string;
-       y: number;
-   }
-   
-   
-    * Response del endpoint GET /forecast/{jobId}
-   export interface ForecastResultResponse {
-       jobId: string;
-       status: ForecastJobStatus;
-       seriesIds: string[];
-       metrics: ForecastMetrics;
-       predictions: ForecastPrediction[];
-   
-       history: HistoricalDataPoint[];
-   
-       // Datos opcionales
-       // Esto podría ser útil
-       modelInfo?: {
-           modelType: string;          // Modelo usado (NBEATS, TFT, etc.)
-           trainedAt: string;          // ISO timestamp
-           trainingDuration?: number   // Duración
-       }
-   }
-   */
+  import { UNIT_LABELS } from "../../../config/constants";
 
   export default function ResultsPage() {
 
@@ -279,7 +236,7 @@
         {/* TARJETA DE ESTADO */}
         <div className="grid grid-cols-1 gap-6">
           <Card className="border-dashed py-12">
-            <CardContent className="flex flex-col items-center justify-center text-center space-y-4">
+            <CardContent className="flex flex-col items-center justify-center text-center space-y-3">
               {/* SPINNER DE CARGA */}
               {!isCompleted && !isFailed && !isIdle && (
                 <div className="p-4 bg-primary/10 rounded-full">
@@ -332,10 +289,25 @@
                   Ver Reporte Completo
                 </Button>
               </div>
+
+              {/* HORIZONTE */}
+              { isCompleted && results !== null && (
+                <div className="gap-8 pt-4 grid grid-cols-2">
+                  <div className="flex flex-col gap-3 pt-4">
+                    <p className="text-sm text-muted-foreground">Periodos</p>
+                    <p>{results.horizon.value}</p>
+                  </div>
+                  <div className="flex flex-col gap-3 pt-4">
+                    <p className="text-sm text-muted-foreground">Frecuencia</p>
+                    <p>{UNIT_LABELS[results.horizon.unit]}</p>
+                  </div>
+                  
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* GRÁFICO DE MÉTRICAS */}
+          {/* GRÁFICOS Y METRICAS */}
           <div className={`grid grid-cols-1 gap-6 ${isCompleted ? "" : "opacity-40 grayscale pointer-events-none"}`}>
             {/* GRÄFICO DE PROYECCIÓN */}
             <Card>

@@ -167,14 +167,6 @@ export interface ForecastResultResponse {
     seriesIds: string[];
     metrics: ForecastMetrics;
     predictions: ForecastPrediction[];
-
     history: HistoricalDataPoint[];
-
-    // Datos opcionales
-    // Esto podría ser útil
-    modelInfo?: {
-        modelType: string;          // Modelo usado (NBEATS, TFT, etc.)
-        trainedAt: string;          // ISO timestamp
-        trainingDuration?: number   // Duración
-    }
+    horizon: ForecastHorizon;
 }

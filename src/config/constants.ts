@@ -1,3 +1,4 @@
+import type { TimeUnit } from "@/services/api";
 /**
  * CONSTANTES DE LA APLICACIÓN
  */
@@ -40,11 +41,11 @@ export const DAY_EQUIVALENCE = {
 /**
  * Label en español para unidades temporales
  */
-export const UNIT_LABELS = {
+export const UNIT_LABELS: Record<TimeUnit, string> = {
     days: "dias",
     weeks: "semanas",
     months: "meses",
-} as const;
+};
 
 
 /**
