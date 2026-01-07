@@ -17,4 +17,5 @@ export type {
     ForecastPrediction,
     ForecastHorizon,
     TimeUnit,
+    HistoricalDataPoint,
 } from "./types"
