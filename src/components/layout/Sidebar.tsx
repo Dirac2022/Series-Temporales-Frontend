@@ -4,6 +4,7 @@ import {
     LayoutDashboard,
     TrendingUp,
     FilePieChart,
+    LineChart,
     Settings
 } from "lucide-react"
 import { cn } from "../../lib/utils"
@@ -11,9 +12,11 @@ import { cn } from "../../lib/utils"
 // Definimos la estructua de los items de navegacion para que el componente sea mantenible
 const navItems = [
     { name: "Inicio", href: "/", icon: LayoutDashboard },
-    { name: "Generar Predicción", href: "/forecast", icon: TrendingUp },
+    { name: "Generar Prediccion", href: "/forecast", icon: TrendingUp },
+    { name: "Predicciones", href: "/predictions", icon: LineChart },
     { name: "Resultados", href: "/results", icon: FilePieChart },
 ]
+
 
 export function Sidebar() {
     return (
