@@ -3,17 +3,10 @@ import { ThemeProvider } from "./context/ThemeProvider"
 import { Header } from  "./components/layout/Header"
 import { Sidebar } from "./components/layout/Sidebar"
 import TechnicalPage from "./features/forecasting/pages/ForecastingPage"
+import HomePage from "./features/home/pages/HomePage"
+import PredictionsPage from "./features/predictions/pages/PredictionsPage"
 import ResultsPage from "./features/results/pages/ResultsPage"
 import ReportPage from "./features/results/pages/ReportPage"
-import { logger } from "./services/logger"
-import { useEffect } from "react"
-
-// Placehoders
-const Home = () => (
-  <div className="space-y-4">
-    <h2 className="text-2xl font-bold text-foreground">Bienvenido a la Plataforma de Predicción</h2>  
-  </div>
-)
 
 function App() {
 
@@ -31,8 +24,9 @@ function App() {
               <main className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-7xl mx-auto">
                   <Routes>
-                    <Route path="/" element={<Home />}/>
+                    <Route path="/" element={<HomePage />}/>
                     <Route path="/forecast" element={<TechnicalPage />}/>
+                    <Route path="/predictions" element={<PredictionsPage />}/>
                     <Route path="/results" element={<ResultsPage />}/>
                     <Route path="/results/:jobId" element={<ResultsPage />}/>
                     <Route path="/results/:jobId/report" element={<ReportPage />}/>
