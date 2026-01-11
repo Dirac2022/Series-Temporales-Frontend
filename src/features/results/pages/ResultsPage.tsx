@@ -389,8 +389,17 @@
                   </div>
                   
                 ) : (
-                  <div className="h-80 md:h-96 flex items-center justify-center">
-                    <p className="text-sm italic">Area reservada para grafico interactivo</p>
+                  <div className="h-80 md:h-96 flex flex-col items-center justify-center gap-3">
+                    {(!isIdle && !isCompleted) || isLoadingResults ? (
+                      <>
+                        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                        <p className="text-sm text-muted-foreground">
+                          {isLoadingResults ? "Cargando datos del gráfico..." : "Generando predicciones..."}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm italic">Area reservada para grafico interactivo</p>
+                    )}
                   </div>
                 )}
               </CardContent>
