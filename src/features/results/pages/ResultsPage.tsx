@@ -394,7 +394,7 @@
                       <>
                         <Loader2 className="h-10 w-10 text-primary animate-spin" />
                         <p className="text-sm text-muted-foreground">
-                          {isLoadingResults ? "Cargando datos del gráfico..." : "Generando predicciones..."}
+                          {isLoadingResults ? "Cargando datos del gráfico..." : "Generando gráfico..."}
                         </p>
                       </>
                     ) : (
@@ -422,6 +422,13 @@
                       <MetricRow label="MAPE" value={results.metrics.mape} />
                       <MetricRow label="WAPE" value={results.metrics.wape} />
                     </>
+                  ) : (!isIdle && !isCompleted) || isLoadingResults ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">
+                        {isLoadingResults ? "Cargando métricas..." : "Calculando métricas de error..."}
+                      </p>
+                    </div>
                   ) : (
                     <p className="text-sm italic">Area reservada para MAE, RMSE y MAPE</p>
                   )}
