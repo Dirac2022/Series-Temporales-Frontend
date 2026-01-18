@@ -389,8 +389,17 @@
                   </div>
                   
                 ) : (
-                  <div className="h-80 md:h-96 flex items-center justify-center">
-                    <p className="text-sm italic">Area reservada para grafico interactivo</p>
+                  <div className="h-80 md:h-96 flex flex-col items-center justify-center gap-3">
+                    {(!isIdle && !isCompleted) || isLoadingResults ? (
+                      <>
+                        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                        <p className="text-sm text-muted-foreground">
+                          {isLoadingResults ? "Cargando datos del gráfico..." : "Generando gráfico..."}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm italic">Area reservada para grafico interactivo</p>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -413,6 +422,13 @@
                       <MetricRow label="MAPE" value={results.metrics.mape} />
                       <MetricRow label="WAPE" value={results.metrics.wape} />
                     </>
+                  ) : (!isIdle && !isCompleted) || isLoadingResults ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">
+                        {isLoadingResults ? "Cargando métricas..." : "Calculando métricas de error..."}
+                      </p>
+                    </div>
                   ) : (
                     <p className="text-sm italic">Area reservada para MAE, RMSE y MAPE</p>
                   )}
