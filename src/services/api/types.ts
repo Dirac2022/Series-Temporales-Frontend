@@ -16,7 +16,7 @@ export type TimeUnit = 'days' | 'weeks' | 'months';
 
 /**
  * El horizonte define cuanto tiempo adelante queremos predecir
- */ 
+ */
 export interface ForecastHorizon {
     value: number;      // Cantidad de periodos
     unit: TimeUnit;     // Unidad temporal
@@ -140,11 +140,9 @@ export interface ForecastPrediction {
     unique_id: string;          // ID de la serie temporal
     ds: string;                 // Fecha (date string)
     yhat: number;               // Valor predicho
-
-    // Intervalos de confianza (opcionales)
-    y_lower?: number;        // Limite infererior del intervalo
-    y_upper?: number;       // Limite superior del intervalo
-    confidence_level?: number;    
+    y_lower: number;        // Limite infererior del intervalo
+    y_upper: number;       // Limite superior del intervalo
+    confidence_level?: number;
 }
 
 
@@ -170,3 +168,18 @@ export interface ForecastResultResponse {
     history: HistoricalDataPoint[];
     horizon: ForecastHorizon;
 }
+
+
+/**
+ * Parametros de consulta para GET /predictions/filtered
+ */
+export interface PredictionFilterParams {
+    warehouse_code?: string;
+    product_code?: string;
+    channel_code?: string;
+    acct_code?: string;
+    territory_code?: string;
+    dist_code?: string;
+}
+
+export type ForecastPredictionResponse = ForecastPrediction[]
