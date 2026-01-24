@@ -5,7 +5,7 @@ export type LogLevel = "debug" | "info" | "warn" | "error"
  * Modulos principales de la aplicación
  * Permite filtrar logs por área funcional
  */
-export type LogModule = 
+export type LogModule =
     | "API"             // Llamadas HTTP y comunicación con backend
     | "UI"              // Interacciones de interfaz de usuario
     | "STORAGE"         // Operacioens con localstorage
@@ -14,6 +14,7 @@ export type LogModule =
     | "RESULTS"         // Logica de resultados (Results)
     | "REPORT"          // Reporte
     | "APP"             // Eventos generales de la aplicacion
+    | "PREDICTIONS"     // Prediciones devuelvas por servidor
 
 /**
  * Estructura de un log entry
