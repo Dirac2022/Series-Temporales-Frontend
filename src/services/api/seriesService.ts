@@ -8,7 +8,7 @@ import axios from 'axios'
 import { logger } from "../logger"
 import { handleError, ValidationError } from "../../lib/errors"
 import { API } from "../../config/constants"
-import type { PredictionFilterParams, ForecastPrediction, ForecastPredictionResponse } from './types'
+import type { PredictionFilterParams, ForecastPredictionResponse } from './types'
 
 /**
  * Servicio para operaciones de predicciones

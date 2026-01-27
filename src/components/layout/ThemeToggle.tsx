@@ -1,4 +1,3 @@
-import * as React from "react"
 import { Moon, Sun, Monitor } from "lucide-react"
 import { useTheme } from "../../context/ThemeProvider"
 import { Button } from "../ui/button"
@@ -6,10 +5,10 @@ import { Button } from "../ui/button"
 export function ThemeToggle() {
     // Extraemos el tema actual y la funcion para cambiarlo del contexto flobal
     const { theme, setTheme } = useTheme()
-    
+
     const toggleTheme = () => {
-        if ( theme === 'light' ) setTheme('dark')
-        else if ( theme === 'dark' ) setTheme('system')
+        if (theme === 'light') setTheme('dark')
+        else if (theme === 'dark') setTheme('system')
         else setTheme('light')
     }
 

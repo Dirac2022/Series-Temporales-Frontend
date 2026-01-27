@@ -7,7 +7,7 @@
  */
 
 import { getISOWeek } from "date-fns"
-import type { ForecastPrediction, TimeUnit, ForecastHorizon } from "../../../services/api"
+import type { ForecastPrediction, ForecastHorizon } from "../../../services/api"
 import { logger } from "../../../services/logger"
 
 /**
@@ -41,13 +41,13 @@ export function aggregateByDayOfWeek(
     const groupedByDay = new Map<number, number[]>();
 
     predictions.forEach((pred) => {
-        const date = new Date(pred.ds); 
+        const date = new Date(pred.ds);
 
         // Domingo = 0 = , ... , Sabado = 6
         const dayOfWeek = date.getDay();
 
-        const existing = groupedByDay.get(dayOfWeek) ?? []; 
-        groupedByDay.set(dayOfWeek, [...existing, pred.yhat]) 
+        const existing = groupedByDay.get(dayOfWeek) ?? [];
+        groupedByDay.set(dayOfWeek, [...existing, pred.yhat])
     });
 
     // Calcular promedios y crear etiquetas
@@ -68,8 +68,8 @@ export function aggregateByDayOfWeek(
         };
     })
 
-    // Filtrar valores undefined
-    .filter(Boolean) as AggregatedDataPoint[];
+        // Filtrar valores undefined
+        .filter(Boolean) as AggregatedDataPoint[];
 
     logger.debug("RESULTS", "Agregacion por dia de semana completada", {
         totalPredictions: predictions.length,
@@ -132,8 +132,8 @@ export function aggregateByWeek(
             ? `${result[0].label} - ${result[result.length - 1].label}`
             : "N/A",
         data: result
-    }); 
-    
+    });
+
     return result;
 }
 
@@ -155,7 +155,7 @@ export function aggregateByMonth(
         const date = new Date(pred.ds);
         const year = date.getFullYear();
         const monthIndex = date.getMonth();         // Enero = 0 ,  ..., Diciembre = 11
-        
+
 
         // Crear una llave unica "YYYY-MM"
         const monthKey = `${year}-${(monthIndex + 1).toString().padStart(2, "0")}`;
@@ -190,7 +190,7 @@ export function aggregateByMonth(
         })
 
         // Eliminar sortKey del resultado final
-        .map(({ sortKey, ...rest}) => rest) as AggregatedDataPoint[];
+        .map(({ sortKey, ...rest }) => rest) as AggregatedDataPoint[];
 
     logger.debug("RESULTS", "Agregacion por mes completada", {
         totalPredictions: predictions.length,

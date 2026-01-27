@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderHook, act, waitFor } from "@testing-library/react"
 import { useFilteredPredictions } from "../useFilteredPredictions"
 import { seriesService } from "../../../../services/api/seriesService"
-import type { ForecastPrediction, ForecastPredictionResponse } from "../../../../services/api/types"
+import type { ForecastPredictionResponse } from "../../../../services/api/types"
 
 /**
  * Mock del servicio

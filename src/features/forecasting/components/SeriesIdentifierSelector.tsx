@@ -1,4 +1,3 @@
-import * as React from "react"
 import { Label } from "../../../components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
@@ -6,7 +5,7 @@ import { Button } from "../../../components/ui/button"
 import { Info } from "lucide-react"
 
 interface SeriesIdentifierSelectorProps {
-    availableColumns: string [];
+    availableColumns: string[];
     excludedColumns: string[];      // Columnas que no se pueden seleccionar (timestamp y target)
     selectedColumns: string[];
     onSelectionChange: (columns: string[]) => void;
@@ -14,11 +13,11 @@ interface SeriesIdentifierSelectorProps {
 
 
 export function SeriesIdentifierSelector({
-    availableColumns, 
+    availableColumns,
     excludedColumns,
     selectedColumns,
     onSelectionChange
-} : SeriesIdentifierSelectorProps) {
+}: SeriesIdentifierSelectorProps) {
 
     // Filtra las columnas que el usuario puede seleccionar
     const selectableColumns = availableColumns.filter(
@@ -36,7 +35,7 @@ export function SeriesIdentifierSelector({
         }
     };
 
-    const estimatedSeriesCount = selectedColumns.length > 0 ? Math.pow(10, selectedColumns.length) : 0;
+    // const estimatedSeriesCount = selectedColumns.length > 0 ? Math.pow(10, selectedColumns.length) : 0;
 
     return (
         <Card>
@@ -65,7 +64,7 @@ export function SeriesIdentifierSelector({
                             <Button
                                 key={column}
                                 onClick={() => toggleColumn(column)}
-                                variant={isSelected ? 'default': 'secondary'}
+                                variant={isSelected ? 'default' : 'secondary'}
                                 size='sm'
                                 type='button'
                                 className="w-full"

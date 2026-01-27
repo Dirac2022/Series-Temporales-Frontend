@@ -7,7 +7,7 @@ import { http, HttpResponse } from "msw"
 import { server } from "../../../test/setup"
 import { seriesService } from "../seriesService"
 import { API } from "../../../config/constants"
-import type { ForecastPrediction, ForecastPredictionResponse } from "../types"
+import type { ForecastPredictionResponse } from "../types"
 
 /**
  * Datos mock para simular retorno de backend

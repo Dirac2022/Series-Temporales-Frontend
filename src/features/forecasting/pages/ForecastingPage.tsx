@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { FileUpload } from "../components/FileUpload"
@@ -56,8 +56,8 @@ export default function ForecastingPage() {
     () => getStoredValue(STORAGE_KEYS.FORECAST_MAPPING, {
       timestamp: "", // Columna de tiempo
       target: "", // Columna objetivo
-      }
-  ));
+    }
+    ));
 
   // Identificadores de series
   const [seriesIdentifiers, setSeriesIdentifiers] = useState<string[]>(
@@ -71,7 +71,7 @@ export default function ForecastingPage() {
       value: 4,
       unit: 'weeks'
     }
-  ));
+    ));
 
   // Array de columnas disponibles
   const columns = metadata?.columns || [];
@@ -99,13 +99,13 @@ export default function ForecastingPage() {
     }
   }, [fileName]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (fileName) {
       window.localStorage.setItem(STORAGE_KEYS.FORECAST_MAPPING, JSON.stringify(mapping));
     }
   }, [mapping]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (fileName) {
       window.localStorage.setItem(STORAGE_KEYS.FORECAST_SERIES_IDS, JSON.stringify(seriesIdentifiers));
     }
@@ -117,11 +117,11 @@ export default function ForecastingPage() {
     }
   }, [horizon]);
 
-  const estimatedSeriesCount = useMemo(() => {
-    if (!metadata) return 1;
-    if (seriesIdentifiers.length === 0) return 1;
-    return Math.min(metadata.rowCount, Math.pow(10, seriesIdentifiers.length));
-  }, [metadata, seriesIdentifiers.length]);
+  // const estimatedSeriesCount = useMemo(() => {
+  //   if (!metadata) return 1;
+  //   if (seriesIdentifiers.length === 0) return 1;
+  //   return Math.min(metadata.rowCount, Math.pow(10, seriesIdentifiers.length));
+  // }, [metadata, seriesIdentifiers.length]);
 
   // TODO: Recomendacion de horizonte maximo
   // Flexible por si el horizonte es diario | semanal | mensual.
@@ -141,7 +141,7 @@ export default function ForecastingPage() {
   //     day_equivalente: DAY_EQUIVALENCE[horizon.unit],
   //     max_allowed: max_allowed,
   //   });
-    
+
   //   return max_allowed;
   //   // return Math.max(
   //   //   1,
@@ -153,7 +153,8 @@ export default function ForecastingPage() {
 
   // Handler cuando se carga exitosamente un archivo
   // Recibe tambien el File y lo guarda en estado
-  const handleUploadSuccess = (data: BackendFileResponse, name: string, file: File) => {
+  // const handleUploadSuccess = (data: BackendFileResponse, name: string, file: File) => {
+  const handleUploadSuccess = (data: BackendFileResponse, name: string) => {
     logger.info("FORECAST", "Archivo cargado exitosamente en FileUpload", {
       fileName: name,
       fileId: data.fileId,
@@ -166,7 +167,7 @@ export default function ForecastingPage() {
     setFileName(name);
 
     // Limpiar configuracion anterior
-    setMapping({ timestamp: "", target: ""});
+    setMapping({ timestamp: "", target: "" });
     setSeriesIdentifiers([]);
     setHorizon({ value: 4, unit: "weeks" });
 
@@ -179,7 +180,7 @@ export default function ForecastingPage() {
     mapping.target !== "" &&
     seriesIdentifiers.length > 0 &&
     !isLoading;
-    // && isHorizonValid;
+  // && isHorizonValid;
 
   /**
    * Handler para generar prediccion
@@ -220,7 +221,7 @@ export default function ForecastingPage() {
   };
 
 
-  
+
   useEffect(() => {
     if (error) {
       const info = getErrorInfo(error);
@@ -249,7 +250,7 @@ export default function ForecastingPage() {
               <CardDescription>Sube un archivo con tu historico</CardDescription>
             </CardHeader>
             <CardContent>
-              <FileUpload onUploadSuccess={handleUploadSuccess}/>
+              <FileUpload onUploadSuccess={handleUploadSuccess} />
             </CardContent>
           </Card>
 
@@ -437,7 +438,7 @@ export default function ForecastingPage() {
                 onClick={handleGenerateForecast}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
-                { isLoading ? "Procesando..." : "Generar Prediccion"}
+                {isLoading ? "Procesando..." : "Generar Prediccion"}
                 {/* Generar Prediccion */}
               </Button>
               {/* MENSAJE DE AYUDA (boton deshabilitado) */}
