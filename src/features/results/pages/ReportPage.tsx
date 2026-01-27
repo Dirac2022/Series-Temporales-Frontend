@@ -16,7 +16,7 @@ import { ArrowLeft, Download, Loader2, Table as TableIcon } from "lucide-react"
 
 // Componentes de graficos
 import { SeriesSelector } from "../components/charts/SeriesSelector"
-import { ForecastLineChart } from "../components/charts/ForecastLineChart"
+import { ForecastLineChart } from "../../../components/charts/ForecastLineChart"
 import { ForecastBarChart } from "../components/charts/ForecastBarChart"
 
 // Servicios y tipado
@@ -76,9 +76,9 @@ const exportToCSV = (data: ForecastPrediction[], filename: string) => {
  * 
  */
 export default function ReportPage() {
-    
+
     // ROUTING: Obtener jobId de la URL
-    const { jobId } = useParams<{ jobId: string}>();
+    const { jobId } = useParams<{ jobId: string }>();
 
     // Datos completos del forecast
     const [results, setResults] = useState<ForecastResultResponse | null>(null);
@@ -95,7 +95,7 @@ export default function ReportPage() {
      * Si el usuario entra directamente por URL, necesitamos pedir los datos al API
      */
     useEffect(() => {
-        
+
         if (!jobId) {
             logger.warn("REPORT", "No se proporciono jobId");
             setIsLoading(false);
@@ -160,7 +160,7 @@ export default function ReportPage() {
      * 
      * Si no hay resultados despues de cargar (error o jobId invalido)
      */
-    if(!results) {
+    if (!results) {
         return (
             <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
                 <p className="text-lg font-medium">
@@ -205,7 +205,7 @@ export default function ReportPage() {
                         Previsualización de predicciones
                     </CardTitle>
                     <CardDescription>
-                        { displayData.length > REPORT.MAX_ROWS_DISPLAYED && `Mostrando las primeras ${displayData.length} filas del pronosico generado`}
+                        {displayData.length > REPORT.MAX_ROWS_DISPLAYED && `Mostrando las primeras ${displayData.length} filas del pronosico generado`}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -213,11 +213,11 @@ export default function ReportPage() {
                         {/* TABLA SIMPLE DE TRES COLUMNAS */}
                         <table className="w-full text-sm">
                             <thead className="bg-muted/50 border-b">
-                            <tr>
-                                <th className="px-4 py-3 text-left font-medium">unique_id</th>
-                                <th className="px-4 py-3 text-left font-medium">fecha</th>
-                                <th className="px-4 py-3 text-right font-medium">prediccion</th>
-                            </tr>
+                                <tr>
+                                    <th className="px-4 py-3 text-left font-medium">unique_id</th>
+                                    <th className="px-4 py-3 text-left font-medium">fecha</th>
+                                    <th className="px-4 py-3 text-right font-medium">prediccion</th>
+                                </tr>
                             </thead>
                             <tbody className="divide-y">
                                 {displayData.map((row, index) => (

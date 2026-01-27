@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Loader2, AlertCircle, TrendingUp } from "lucide-react"
 import { PredictionFilters } from "../components/PredictionFilters"
 import { PredictionsTable } from "../components/PredictionsTable"
-import { ForecastLineChart } from "../../results/components/charts/ForecastLineChart"
+import { ForecastLineChart } from "../../../components/charts/ForecastLineChart"
 import { useFilteredPredictions } from "../hooks/useFilteredPredictions"
 
 /**

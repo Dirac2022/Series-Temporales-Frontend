@@ -2,7 +2,7 @@
  * Grafico de lineas para visualizar datos historicos y predicciones de series temporales
  */
 import { useMemo, useCallback } from "react"
-import { 
+import {
     CartesianGrid,
     Line,
     ReferenceLine,
@@ -11,12 +11,12 @@ import {
     Tooltip,
     XAxis,
     YAxis,
-    ComposedChart 
+    ComposedChart
 } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { LineChart as LineChartIcon } from "lucide-react"
-import type { HistoricalDataPoint, ForecastPrediction } from "../../../../services/api"
-import { logger } from "../../../../services/logger"
+import type { HistoricalDataPoint, ForecastPrediction } from "../../services/api"
+import { logger } from "../../services/logger"
 
 /**
  * Props del componente ForecastLineChart
@@ -74,14 +74,14 @@ export function ForecastLineChart({
      * Construccion de datos para el grafico
      */
     const chartData = useMemo(() => {
-        
+
         const merged = new Map<string, any>();
 
         // Procesar datos historicos
         history
             .filter((r) => r.unique_id === selectedSeriesId)
             .forEach((r) => {
-                merged.set(r.ds, {ds: r.ds, actual: r.y});
+                merged.set(r.ds, { ds: r.ds, actual: r.y });
             });
 
         // Procesar predicciones
@@ -89,7 +89,7 @@ export function ForecastLineChart({
             .filter((r) => r.unique_id === selectedSeriesId)
             .forEach((r) => {
                 // Obtener el objeto existente o crear uno nuevo con solo la fecha
-                const prev = merged.get(r.ds) ?? { ds: r.ds}
+                const prev = merged.get(r.ds) ?? { ds: r.ds }
                 merged.set(r.ds, {
                     ...prev,
                     yhat: r.yhat,
@@ -157,76 +157,76 @@ export function ForecastLineChart({
                         <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis
-                                        dataKey="ds"
-                                        tickFormatter={(value) => new Date(value).toLocaleDateString("es-PE", {
-                                            day: "2-digit", month:"2-digit", year:"2-digit",
-                                        })}
-                                        label={{ value: "Fecha", position: "insideBottom", offset: -5}}
-                                    />
-                                    <YAxis 
-                                        label={{ value: "Proyeccion", angle: -90, position: "insideLeft"}}
-                                    />
-                                    {/* TOOLTIP */}
-                                    <Tooltip
-                                        content={({ active, label, payload}) => {
-                                            if (!active || !payload || payload.length === 0) return null;
+                                <XAxis
+                                    dataKey="ds"
+                                    tickFormatter={(value) => new Date(value).toLocaleDateString("es-PE", {
+                                        day: "2-digit", month: "2-digit", year: "2-digit",
+                                    })}
+                                    label={{ value: "Fecha", position: "insideBottom", offset: -5 }}
+                                />
+                                <YAxis
+                                    label={{ value: "Proyeccion", angle: -90, position: "insideLeft" }}
+                                />
+                                {/* TOOLTIP */}
+                                <Tooltip
+                                    content={({ active, label, payload }) => {
+                                        if (!active || !payload || payload.length === 0) return null;
 
-                                            const relevantData = payload.filter(
-                                                p => p.dataKey === "actual" || p.dataKey === "yhat"
-                                            );
+                                        const relevantData = payload.filter(
+                                            p => p.dataKey === "actual" || p.dataKey === "yhat"
+                                        );
 
-                                            return (
-                                                <div className="rounded-md border bg-background px-3 py-2 shadow-sm">
-                                                    {/* FECHA FORMATEADA */}
-                                                    <div className="text-xs font-medium text-foreground">
-                                                        Fecha: {formatDate(String(label))}
-                                                    </div>
-                                                    {/* LISTA DE VALORES */}
-                                                    <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-                                                        {relevantData.map((entry) => {
-                                                            const name = entry.name === "actual" ? "Serie" : "Pronostico";
-                                                            
-                                                            return (
-                                                                <div
-                                                                    key={entry.dataKey}
-                                                                    className="flex items-center justify-between gap-3"
-                                                                >
-                                                                    <span>{name}</span>
-                                                                    <span className="font-mono text-foreground">
-                                                                        {numberFormatter.format(Number(entry.value))} unidades
-                                                                    </span>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
+                                        return (
+                                            <div className="rounded-md border bg-background px-3 py-2 shadow-sm">
+                                                {/* FECHA FORMATEADA */}
+                                                <div className="text-xs font-medium text-foreground">
+                                                    Fecha: {formatDate(String(label))}
                                                 </div>
-                                            );
-                                        }}
-                                    />
+                                                {/* LISTA DE VALORES */}
+                                                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                                                    {relevantData.map((entry) => {
+                                                        const name = entry.name === "actual" ? "Serie" : "Pronostico";
 
-                                    {/* INTERVALO DE CONFIANZA */}
-                                    <Area 
-                                        type="linear" dataKey="y_lower" stroke="none"fill="transparent" isAnimationActive={false}
-                                    />
-                                    <Area 
-                                        type="linear" dataKey="y_upper" stroke="none" fill="#2563eb" fillOpacity={0.2} isAnimationActive={false}
-                                    />
+                                                        return (
+                                                            <div
+                                                                key={entry.dataKey}
+                                                                className="flex items-center justify-between gap-3"
+                                                            >
+                                                                <span>{name}</span>
+                                                                <span className="font-mono text-foreground">
+                                                                    {numberFormatter.format(Number(entry.value))} unidades
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    }}
+                                />
 
-                                    {/* LINEA DE REFERENCIA */}
-                                    {forecastStartDate && (
-                                        <ReferenceLine
-                                            x={forecastStartDate} stroke="#9ca3af" strokeWidth={2} strokeDasharray="10 5"
-                                        />
-                                    )}
-                                    {/* LINEA DATOS HISTORICOS */}
-                                    <Line 
-                                        type="linear" dataKey="actual" stroke="#0f766e" strokeWidth={2} dot={false}
+                                {/* INTERVALO DE CONFIANZA */}
+                                <Area
+                                    type="linear" dataKey="y_lower" stroke="none" fill="transparent" isAnimationActive={false}
+                                />
+                                <Area
+                                    type="linear" dataKey="y_upper" stroke="none" fill="#2563eb" fillOpacity={0.2} isAnimationActive={false}
+                                />
+
+                                {/* LINEA DE REFERENCIA */}
+                                {forecastStartDate && (
+                                    <ReferenceLine
+                                        x={forecastStartDate} stroke="#9ca3af" strokeWidth={2} strokeDasharray="10 5"
                                     />
-                                    {/* LINEA PREDICCION*/}
-                                    <Line 
-                                        type="linear" dataKey="yhat" stroke="#2563eb" strokeWidth={2} dot={false}
-                                    />
+                                )}
+                                {/* LINEA DATOS HISTORICOS */}
+                                <Line
+                                    type="linear" dataKey="actual" stroke="#0f766e" strokeWidth={2} dot={false}
+                                />
+                                {/* LINEA PREDICCION*/}
+                                <Line
+                                    type="linear" dataKey="yhat" stroke="#2563eb" strokeWidth={2} dot={false}
+                                />
                             </ComposedChart>
                         </ResponsiveContainer>
                     </div>
