@@ -45,9 +45,12 @@ export function PredictionFilters({
     const [values, setValues] = useState<PredictionFilterParams>({})
 
     const handleChange = (key: keyof PredictionFilterParams, value: string) => {
+        // Restriccion: Solo permitir digitos numericos
+        const numericValue = value.replace(/[^0-9]/g, "")
+
         setValues((prev) => ({
             ...prev,
-            [key]: value || undefined
+            [key]: numericValue || undefined
         }))
     }
 
