@@ -183,3 +183,38 @@ export interface PredictionFilterParams {
 }
 
 export type ForecastPredictionResponse = ForecastPrediction[]
+
+
+// ========================================================================
+// REPORTES DE PREDICCIONES (Excel Export)
+// ========================================================================
+
+/**
+ * Representa una fila individual del reporte de predicciones.
+ * Contiene datos enriquecidos con informacion de territorio, almacen,
+ * cuenta y producto obtenidos del backend
+ */
+export interface ReportRow {
+    sem: number;
+    region: string;
+    subregion: string;
+    codWhse: string;
+    whseName: string;
+    plaza: string;
+    sku: string;
+    marca: string;
+    sabor: string;
+    formato: string;
+    botellas: string;
+    tipo: string;
+    prediccion: number;
+}
+
+/**
+ * Respuesta del endpoint GET /api/v1/reports/predictions
+ * Contiene el total de filas y el array de datos enriquecidos
+ */
+export interface ReportResponse {
+    totalRows: number;
+    rows: ReportRow[];
+}
