@@ -5,6 +5,7 @@ export type LogLevel = "debug" | "info" | "warn" | "error"
  * Modulos principales de la aplicación
  * Permite filtrar logs por área funcional
  */
+// TODO: Resolver ambiguedad report/reports
 export type LogModule =
     | "API"             // Llamadas HTTP y comunicación con backend
     | "UI"              // Interacciones de interfaz de usuario
