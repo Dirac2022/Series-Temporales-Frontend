@@ -78,7 +78,7 @@ export function ExportExcelButton({
         <Button
             variant="default"
             onClick={handleExport}
-            disabled={isExporting || disabled || rows.length == 0}
+            disabled={isExporting || disabled || rows.length === 0}
         >
             <Download className="h-4 w-4 mr-2" />
             {isExporting ? "Exportando..." : "Exportar Excel"}
