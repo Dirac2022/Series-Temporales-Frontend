@@ -4,7 +4,8 @@ import {
     TrendingUp,
     FilePieChart,
     LineChart,
-    Settings
+    Settings,
+    FileSpreadsheet,
 } from "lucide-react"
 import { cn } from "../../lib/utils"
 
@@ -14,6 +15,7 @@ const navItems = [
     { name: "Generar Prediccion", href: "/forecast", icon: TrendingUp },
     { name: "Predicciones", href: "/predictions", icon: LineChart },
     { name: "Resultados", href: "/results", icon: FilePieChart },
+    { name: "Reportes", href: "/reports", icon: FileSpreadsheet },
 ]
 
 
