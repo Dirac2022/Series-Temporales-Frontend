@@ -6,8 +6,7 @@ import TechnicalPage from "./features/forecasting/pages/ForecastingPage"
 import HomePage from "./features/home/pages/HomePage"
 import PredictionsPage from "./features/predictions/pages/PredictionsPage"
 import ResultsPage from "./features/results/pages/ResultsPage"
-import ReportPage from "./features/results/pages/ReportPage"
-import ExcelReportPage from "@/features/reports/pages/ExcelReportPage"
+import ReportPage from "./features/reports/pages/ReportPage"
 
 function App() {
 
@@ -30,8 +29,7 @@ function App() {
                   <Route path="/predictions" element={<PredictionsPage />} />
                   <Route path="/results" element={<ResultsPage />} />
                   <Route path="/results/:jobId" element={<ResultsPage />} />
-                  <Route path="/results/:jobId/report" element={<ReportPage />} />
-                  <Route path="/reports/:jobId" element={<ExcelReportPage />} />
+                  <Route path="/reports/" element={<ReportPage />} />
 
                   {/* Ruta 404 */}
                   <Route path="*" element={
