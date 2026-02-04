@@ -218,3 +218,21 @@ export interface ReportResponse {
     totalRows: number;
     rows: ReportRow[];
 }
+
+/**
+ * Resumen de un job de forecast disponible
+ * 
+ */
+export interface JobSummary {
+    id: string;
+    horizonValue: number;
+    horizonUnit: string;
+    createdAt: string;
+}
+
+/**
+ * Respuesta del endpoint GET /api/v1/reports/jobs
+ */
+export interface JobsListResponse {
+    jobs: JobSummary[]
+}
