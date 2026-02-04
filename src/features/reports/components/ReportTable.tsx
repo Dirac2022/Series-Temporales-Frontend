@@ -48,7 +48,8 @@ export function ReportTable({ rows, isLoading }: ReportTableProps) {
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">Sem</th>
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">Región</th>
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">Subregión</th>
-                        <th className="px-3 py-3 text-left font-medium text-muted-foreground">Almacén</th>
+                        <th className="px-3 py-3 text-left font-medium text-muted-foreground">Cod Whse</th>
+                        <th className="px-3 py-3 text-left font-medium text-muted-foreground">Whse Nam</th>
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">Plaza</th>
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">SKU</th>
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">Marca</th>
@@ -56,7 +57,7 @@ export function ReportTable({ rows, isLoading }: ReportTableProps) {
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">Formato</th>
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">Botellas</th>
                         <th className="px-3 py-3 text-left font-medium text-muted-foreground">Tipo</th>
-                        <th className="px-3 py-3 text-left font-medium text-muted-foreground">Predicción</th>
+                        <th className="px-3 py-3 text-right font-medium text-muted-foreground">Predicción</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -69,16 +70,16 @@ export function ReportTable({ rows, isLoading }: ReportTableProps) {
                             <td className="px-3 py-2 whitespace-nowrap">{row.region}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{row.subregion}</td>
                             <td className="font-mono text-xs">{row.codWhse}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{row.whseName}</td>
+                            <td className="ml-1 text-muted-foreground">{row.whseName}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{row.plaza}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{row.sku}</td>
+                            <td className="px-3 py-2 whitespace-nowrap font-mono text-xs">{row.sku}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{row.marca}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{row.sabor}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{row.formato}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{row.botellas}</td>
+                            <td className="px-3 py-2 whitespace-nowrap text-center">{row.botellas}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{row.tipo}</td>
                             {/* TODO: Revisar si se puede refactorizar en una funcion aparte */}
-                            <td className="px-3 py-2 whitespace-nowrap">{row.prediccion.toLocaleString("es-PE", {
+                            <td className="px-3 py-2 whitespace-nowrap text-right font-semibold text-primary">{row.prediccion.toLocaleString("es-PE", {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
                             })}</td>
