@@ -43,7 +43,7 @@ export const masterService = {
             const formData = new FormData();
             formData.append("file", file);
 
-            const url = `${API.BASE_URL}/masters/${entityType}/upload`;
+            const url = `${API.BASE_URL}/master/${entityType}/upload`;
 
             const response = await axios.post<MasterUploadResponse>(
                 url,
