@@ -7,6 +7,10 @@
  */
 
 export { forecastService } from "./forecastService"
+export { reportService } from "./reportService"
+export { seriesService } from "./seriesService"
+export { masterService } from "./masterService"
+
 export type {
     UploadResponse,
     ForecastStartResponse,
@@ -18,4 +22,17 @@ export type {
     ForecastHorizon,
     TimeUnit,
     HistoricalDataPoint,
+    ForecastConfiguration,
+    BackendFileResponse,
+    ReportResponse,
+    ReportRow,
+    JobSummary,
+    JobsListResponse,
+    PredictionFilterParams,
+    ForecastPredictionResponse
 } from "./types"
+
+export type {
+    MasterEntityType,
+    MasterUploadResponse
+} from "./masterService"
