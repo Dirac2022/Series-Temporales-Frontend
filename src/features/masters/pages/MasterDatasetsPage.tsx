@@ -48,7 +48,7 @@ export default function MasterDatasetsPage() {
             {/* GRID DE CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {MASTER_ENTITIES.map((entity) => (
-                    <div key={entity.type} className="h-64">
+                    <div key={entity.type} className="h-96">
                         <MasterUploadCard
                             entityType={entity.type}
                             title={entity.title}

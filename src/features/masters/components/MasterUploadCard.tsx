@@ -199,9 +199,9 @@ export function MasterUploadCard({ entityType, title, description }: MasterUploa
 
             {/* Banner de estado fijo abajo (solo success) - Replica exacta del screenshot */}
             {status === "success" && (
-                <div className="bg-blue-50 dark:bg-blue-950/30 border-t border-blue-100 dark:border-blue-900/50 p-2 flex items-start gap-2 text-xs">
-                    <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-blue-700 dark:text-blue-300 font-medium">
+                <div className="bg-blue-50 dark:bg-blue-950/30 border-t border-blue-100 dark:border-blue-900/50 p-4 flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <span className="text-blue-700 dark:text-blue-300 font-medium text-sm">
                         {resultMessage}
                     </span>
                 </div>
