@@ -6,6 +6,8 @@ import {
     LineChart,
     Settings,
     FileSpreadsheet,
+    Database,
+    UploadCloud,
 } from "lucide-react"
 import { cn } from "../../lib/utils"
 
@@ -13,8 +15,9 @@ import { cn } from "../../lib/utils"
 const navItems = [
     { name: "Inicio", href: "/", icon: LayoutDashboard },
     { name: "Generar Prediccion", href: "/forecast", icon: TrendingUp },
-    { name: "Predicciones", href: "/predictions", icon: LineChart },
     { name: "Resultados", href: "/results", icon: FilePieChart },
+    { name: "Predicciones", href: "/predictions", icon: LineChart },
+    { name: "Datasets Maestro", href: "/masters", icon: Database },
     { name: "Reportes", href: "/reports", icon: FileSpreadsheet },
 ]
 
