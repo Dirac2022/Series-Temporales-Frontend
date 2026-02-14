@@ -7,6 +7,7 @@ import HomePage from "./features/home/pages/HomePage"
 import PredictionsPage from "./features/predictions/pages/PredictionsPage"
 import ResultsPage from "./features/results/pages/ResultsPage"
 import ReportPage from "./features/reports/pages/ReportPage"
+import MasterDatasetsPage from "./features/masters/pages/MasterDatasetsPage"
 
 function App() {
 
@@ -30,6 +31,7 @@ function App() {
                   <Route path="/results" element={<ResultsPage />} />
                   <Route path="/results/:jobId" element={<ResultsPage />} />
                   <Route path="/reports/" element={<ReportPage />} />
+                  <Route path="/masters" element={<MasterDatasetsPage />} />
 
                   {/* Ruta 404 */}
                   <Route path="*" element={

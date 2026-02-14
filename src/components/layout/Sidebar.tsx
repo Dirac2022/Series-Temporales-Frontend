@@ -6,12 +6,14 @@ import {
     LineChart,
     Settings,
     FileSpreadsheet,
+    Database,
 } from "lucide-react"
 import { cn } from "../../lib/utils"
 
 // Definimos la estructua de los items de navegacion para que el componente sea mantenible
 const navItems = [
     { name: "Inicio", href: "/", icon: LayoutDashboard },
+    { name: "Datasets Maestro", href: "/masters", icon: Database },
     { name: "Generar Prediccion", href: "/forecast", icon: TrendingUp },
     { name: "Predicciones", href: "/predictions", icon: LineChart },
     { name: "Resultados", href: "/results", icon: FilePieChart },
