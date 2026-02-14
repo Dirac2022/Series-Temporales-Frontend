@@ -34,5 +34,6 @@ export type {
 
 export type {
     MasterEntityType,
-    MasterUploadResponse
+    MasterUploadResponse,
+    MasterStatusResponse
 } from "./masterService"

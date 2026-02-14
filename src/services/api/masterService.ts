@@ -20,6 +20,8 @@ export interface MasterUploadResponse {
     processed_count: number;
 }
 
+export type MasterStatusResponse = Record<MasterEntityType, string | null>;
+
 export const masterService = {
 
     /**
@@ -67,6 +69,18 @@ export const masterService = {
 
         } catch (error) {
             throw handleError(error, "API", `Upload master ${entityType}`);
+        }
+    },
+
+    /**
+     * Obtiene el estado de actualización de los maestros
+     */
+    getMasterStatus: async (): Promise<MasterStatusResponse> => {
+        try {
+            const response = await axios.get<MasterStatusResponse>(`${API.BASE_URL}/master/status`);
+            return response.data;
+        } catch (error) {
+            throw handleError(error, "API", "Get master status");
         }
     }
 };

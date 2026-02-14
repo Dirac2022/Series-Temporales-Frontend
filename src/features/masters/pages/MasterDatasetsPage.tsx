@@ -1,5 +1,7 @@
 import { MasterUploadCard } from "../components/MasterUploadCard";
-import { type MasterEntityType } from "../../../services/api";
+import { masterService, type MasterEntityType, type MasterStatusResponse } from "../../../services/api";
+import { useEffect, useState } from "react";
+import { logger } from "../../../services/logger";
 
 const MASTER_ENTITIES: { type: MasterEntityType; title: string; description: string }[] = [
     {
@@ -35,6 +37,22 @@ const MASTER_ENTITIES: { type: MasterEntityType; title: string; description: str
 ];
 
 export default function MasterDatasetsPage() {
+
+    const [statuses, setStatuses] = useState<MasterStatusResponse | null>(null);
+
+    const fetchStatus = async () => {
+        try {
+            const data = await masterService.getMasterStatus();
+            setStatuses(data);
+        } catch (error) {
+            logger.error("UI", "Error fetching master status", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchStatus();
+    }, []);
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* ENCABEZADO */}
@@ -53,6 +71,8 @@ export default function MasterDatasetsPage() {
                             entityType={entity.type}
                             title={entity.title}
                             description={entity.description}
+                            lastUpdated={statuses?.[entity.type]}
+                            onUploadSuccess={fetchStatus}
                         />
                     </div>
                 ))}

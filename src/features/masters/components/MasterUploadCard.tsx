@@ -11,11 +11,13 @@ interface MasterUploadCardProps {
     entityType: MasterEntityType;
     title: string;
     description: string;
+    lastUpdated?: string | null;
+    onUploadSuccess?: () => void;
 }
 
 type UploadState = "idle" | "confirm" | "uploading" | "success" | "error";
 
-export function MasterUploadCard({ entityType, title, description }: MasterUploadCardProps) {
+export function MasterUploadCard({ entityType, title, description, lastUpdated, onUploadSuccess }: MasterUploadCardProps) {
 
     const [status, setStatus] = React.useState<UploadState>("idle");
     const [progress, setProgress] = React.useState(0);
@@ -57,6 +59,10 @@ export function MasterUploadCard({ entityType, title, description }: MasterUploa
             setResultMessage(`Dataset cargado: ${selectedFile.name} (${response.processed_count.toLocaleString()} filas)`);
             setStatus("success");
 
+            if (onUploadSuccess) {
+                onUploadSuccess();
+            }
+
             // Auto-reset después de 5 segundos? No, mejor dejarlo visible.
 
         } catch (error) {
@@ -87,6 +93,22 @@ export function MasterUploadCard({ entityType, title, description }: MasterUploa
         setResultMessage("");
     };
 
+    // Formatear fecha
+    const formattedDate = React.useMemo(() => {
+        if (!lastUpdated) return null;
+        try {
+            return new Date(lastUpdated).toLocaleString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return null;
+        }
+    }, [lastUpdated]);
+
     return (
         <div
             className={cn(
@@ -96,9 +118,16 @@ export function MasterUploadCard({ entityType, title, description }: MasterUploa
         >
             {/* Header del Card */}
             <div className="p-4 space-y-1 border-b bg-muted/20">
-                <h3 className="font-semibold tracking-tight text-base flex items-center gap-2">
-                    {title}
-                </h3>
+                <div className="flex justify-between items-start">
+                    <h3 className="font-semibold tracking-tight text-base flex items-center gap-2">
+                        {title}
+                    </h3>
+                    {formattedDate && (
+                        <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground whitespace-nowrap">
+                            Act: {formattedDate}
+                        </span>
+                    )}
+                </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">
                     {description}
                 </p>
