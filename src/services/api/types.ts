@@ -236,3 +236,48 @@ export interface JobSummary {
 export interface JobsListResponse {
     jobs: JobSummary[]
 }
+
+
+// ========================================================================
+// DATASETS (Upload + Listado)
+// ========================================================================
+
+/**
+ * Respuesta del endpoint POST /api/v1/upload para datasets
+ * 
+ * Contiene los metadados del archivo procesado por el backend
+ */
+export interface DatasetUploadResponse {
+    fileId: string              // UUID unico del dataset en el servidor
+    columns: string[]
+    rowCount: number
+    message: string             // Mensaje de confirmacion del backend
+    checksum: string            // Hash SHA-256 del archivo
+}
+
+
+/**
+ * Representa un dataset individual en la lista de datasets
+ * 
+ * Cada item corresponde a un registro en la tabla de metadatos
+ * de PostgreSQL. Los campos numericos pueden ser null si el backend
+ * no pudo calcularlos
+ */
+export interface DatasetSummary {
+    id: string                  // UUID dek dataset
+    filename: string
+    file_size_bytes: number | null
+    row_count: number | null
+    created_at: string          // Fecha ISO 8601 de creacion
+}
+
+/**
+ * Respuesta del endpoint GET /api/v1/datasets
+ * 
+ * Retorna una lista paginada de datasets del tenant
+ * `total` representa el conteo global (no solo la pagina actual)
+ */
+export interface DatasetListResponse {
+    total: number
+    items: DatasetSummary[]
+}
