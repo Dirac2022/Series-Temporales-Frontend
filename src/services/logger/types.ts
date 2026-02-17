@@ -17,6 +17,7 @@ export type LogModule =
     | "APP"             // Eventos generales de la aplicacion
     | "PREDICTIONS"     // Prediciones devuelvas por servidor
     | "REPORTS"
+    | "DATASETS"
 
 /**
  * Estructura de un log entry
