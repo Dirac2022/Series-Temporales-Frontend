@@ -7,6 +7,7 @@
  */
 
 export { forecastService } from "./forecastService"
+export { datasetService } from "./datasetService"
 export type {
     UploadResponse,
     ForecastStartResponse,
@@ -18,4 +19,7 @@ export type {
     ForecastHorizon,
     TimeUnit,
     HistoricalDataPoint,
+    DatasetUploadResponse,
+    DatasetSummary,
+    DatasetListResponse,
 } from "./types"
